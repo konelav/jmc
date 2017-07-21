@@ -464,6 +464,7 @@ CSmcDoc::CSmcDoc() : m_ParseDlg(AfxGetMainWnd() ), m_MudEmulator(AfxGetMainWnd()
 	m_bRemoveESCSelection = ::GetPrivateProfileInt(L"Options" , L"RemoveESCSelection" , 1, szGLOBAL_PROFILE);
 	m_bLineWrap = ::GetPrivateProfileInt(L"Options" , L"LineWrap" , 1, szGLOBAL_PROFILE);
 	m_bShowTimestamps = ::GetPrivateProfileInt(L"Options" , L"LineTimeStamps" , 0, szGLOBAL_PROFILE);
+	m_bStickScrollbar = ::GetPrivateProfileInt(L"Options" , L"StickScrollbar" , 0, szGLOBAL_PROFILE);
 	m_bShowHiddenText = ::GetPrivateProfileInt(L"Options" , L"ShowHiddenText" , 1, szGLOBAL_PROFILE);
 
     nScripterrorOutput  = ::GetPrivateProfileInt(L"Script" , L"ErrOutput", 0 , szGLOBAL_PROFILE);
@@ -534,6 +535,7 @@ CSmcDoc::~CSmcDoc()
 	::WritePrivateProfileInt(L"Options" , L"RemoveESCSelection" , m_bRemoveESCSelection , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"LineWrap" , m_bLineWrap , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"LineTimeStamps" , m_bShowTimestamps , szGLOBAL_PROFILE);
+	::WritePrivateProfileInt(L"Options" , L"StickScrollbar" , m_bStickScrollbar , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"ShowHiddenText", m_bShowHiddenText , szGLOBAL_PROFILE);
 
     ::WritePrivateProfileInt(L"Script" , L"ErrOutput", nScripterrorOutput , szGLOBAL_PROFILE);

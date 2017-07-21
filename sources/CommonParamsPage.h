@@ -50,6 +50,7 @@ public:
 	BOOL	m_bRemoveESC;
 	BOOL	m_bShowHidden;
 	BOOL	m_bShowPing;
+	BOOL	m_bStickScrollbar;
 	int		m_nUserInputHide;
 	//}}AFX_DATA
 

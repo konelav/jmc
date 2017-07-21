@@ -968,8 +968,8 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 					NumOfLines(LengthWithoutANSI(str), m_nLineWidth) : 1;;
 	        }
             // check for splitted and head view 
-            if ( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) {
-                int OldPos = GetScrollPos(SB_VERT);
+            int OldPos = GetScrollPos(SB_VERT);
+            if (( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) || ((OldPos < (nScrollSize-m_nPageSize-1)) && pDoc->m_bStickScrollbar)) {
                 SetScrollPos(SB_VERT, OldPos-new_lines, TRUE);
             } else {
                 rectSmall.left = 0;
