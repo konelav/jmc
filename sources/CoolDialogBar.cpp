@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CCoolDialogBar, CControlBar)
     ON_WM_LBUTTONDBLCLK()
 	ON_WM_NCLBUTTONDBLCLK()
 	ON_WM_SIZE()
+	ON_WM_MOUSEWHEEL()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1007,4 +1008,9 @@ void CCoolDialogBar::Resize(int Width, int Height)
 
 		m_pDockSite->RecalcLayout();
 	}
+}
+
+BOOL CCoolDialogBar::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	return 0;
 }

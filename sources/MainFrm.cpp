@@ -1592,7 +1592,6 @@ BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))
         return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);
-
     CWnd* pWnd = m_wndSplitter.GetPane(0, 0 );
     WPARAM wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
 	if(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_MENU)&0x8000)
@@ -1614,7 +1613,7 @@ BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
             OnUnsplit() ;
     }
 	
-	return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);
+	return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);//There should be no internal forwarding of the message!!! Possible error
 }
 //vls-end//
 
@@ -1670,3 +1669,4 @@ void CMainFrame::OnSysCommand(UINT wParam, LPARAM lParam){
 	if(wParam==SC_KEYMENU && (lParam>>16)<=0) return;
 	CFrameWnd::OnSysCommand(wParam, lParam);
 }
+

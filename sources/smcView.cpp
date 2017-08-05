@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CSmcView, CView)
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
+	ON_WM_MOUSEWHEEL()
 	//}}AFX_MSG_MAP
     ON_MESSAGE(WM_USER+100, OnLineEntered)
 //    ON_MESSAGE(WM_USER+101, OnAddedDrowLine)
@@ -1004,4 +1005,41 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         break;
     }
 	
+}
+
+BOOL CSmcView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	if (pMainWnd == NULL)
+		return 0;
+
+	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
+	{
+		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+		OnVScroll(wParam, 0, 0);
+	}
+	else
+	{
+	    CWnd* pWnd = pMainWnd->m_wndSplitter.GetPane(0, 0 );
+		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+		if(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_MENU)&0x8000)
+			wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+
+	    if (zDelta > 0) 
+		    if ( pMainWnd->m_wndSplitter.GetRowCount() == 1 && pDoc->m_bSplitOnBackscroll )
+			    pMainWnd->m_wndSplitter.SplitRow();
+
+		if ( pWnd )
+		    pWnd->SendMessage(WM_VSCROLL , wParam, 0);
+
+	    if (zDelta < 0) 
+		{
+			int minpos, maxpos, pos;
+	        pWnd->GetScrollRange(SB_VERT, &minpos, &maxpos);
+		    pos = pWnd->GetScrollPos(SB_VERT);
+			if ( pos == maxpos ) 
+				pMainWnd->PostMessage(WM_COMMAND, 0x10000|ID_UNSPLIT, 0);
+	    }
+	}
+	
+	return 0;
 }

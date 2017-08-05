@@ -119,6 +119,7 @@ public:
     afx_msg void OnCaptureChanged(CWnd *pWnd);
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnNcLButtonDblClk(UINT nHitTest, CPoint point);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	//}}AFX_MSG
 
     DECLARE_MESSAGE_MAP()
