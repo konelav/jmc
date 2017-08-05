@@ -330,6 +330,10 @@ void CCoolDialogBar::OnWindowPosChanged(WINDOWPOS FAR* lpwndpos)
 	SetWindowPos(NULL, 0,0,0,0,
 		SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	m_bInRecalcNC = FALSE;
+	if (lpwndpos->flags & SWP_HIDEWINDOW)
+		m_bFlag = FALSE;
+	else if (lpwndpos->flags & SWP_SHOWWINDOW)
+		m_bFlag = TRUE;
 }
 
 BOOL CCoolDialogBar::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message) 
