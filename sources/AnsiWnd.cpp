@@ -45,6 +45,7 @@ BEGIN_MESSAGE_MAP(CAnsiWnd, CWnd)
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
+	ON_WM_MOUSEWHEEL()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -810,3 +811,17 @@ void CAnsiWnd::OnUpdate(LPARAM lHint)
 }
 
 
+
+BOOL CAnsiWnd::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	WPARAM wParam;
+	if (GetKeyState(VK_CONTROL)&0x8000) {
+		wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+	}
+	else {
+		wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+	}
+	OnVScroll(wParam, 0, 0);
+	
+	return 0;
+}
