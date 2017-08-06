@@ -1011,8 +1011,17 @@ BOOL CSmcView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	if (pMainWnd == NULL)
 		return 0;
-
-	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
+	if (pDoc->m_bStickScrollbar){
+		WPARAM wParam;
+		if (GetKeyState(VK_CONTROL)&0x8000) {
+			wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+		}
+		else {
+			wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+		}
+		OnVScroll(wParam, 0, 0);
+	}
+	else if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
 	{
 		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
 		OnVScroll(wParam, 0, 0);
