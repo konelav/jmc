@@ -32,6 +32,8 @@ CEditBar::CEditBar()
     m_posCurPos = NULL;
     m_bExtending = FALSE;
     m_bExtendingChange = FALSE;
+
+	m_nYsize = -1;
 }
 
 CEditBar::~CEditBar()
@@ -527,5 +529,14 @@ void CEditBar::OnTextChanged()
         m_lstTabWords.RemoveAll();
         m_bExtending = FALSE;
     }
+}
+
+CSize CEditBar::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
+	CSize ret = CDialogBar::CalcFixedLayout( bStretch, bHorz );
+	if (m_nYsize > 0) {
+		CRect border = GetBorders();
+		ret.cy = m_nYsize + border.top + border.bottom;
+	}
+	return ret;
 }
 

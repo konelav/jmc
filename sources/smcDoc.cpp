@@ -642,6 +642,11 @@ BOOL CSmcDoc::OnNewDocument()
     SetEvent(hInputDoneEvent);
 
     SetModifiedFlag(FALSE);
+	
+	((CMainFrame*)AfxGetMainWnd())->m_editBar.SetFontHeight(m_nYsize);
+	((CMainFrame*)AfxGetMainWnd())->m_wndStatusBar.SetFontHeight(m_nYsize);
+	((CMainFrame*)AfxGetMainWnd())->RecalcLayout();
+
     return TRUE;
 }
 
@@ -825,17 +830,25 @@ void CSmcDoc::OnOptionsFont()
         ::WritePrivateProfileBinary(L"Font" , L"LOGFONT" ,(LPBYTE)&m_lfText, sizeof(m_lfText), szGLOBAL_PROFILE);
 
         RecalcCharSize();
-        ((CMainFrame*)AfxGetMainWnd())->m_editBar.GetDlgItem(IDC_EDIT)->SetFont(&m_fntText);
+
+		CEditBar *edit = &(((CMainFrame*)AfxGetMainWnd())->m_editBar);
+		edit->GetDlgItem(IDC_EDIT)->SetFont(&m_fntText);
+		edit->SetFontHeight(m_nYsize);
+
+		CJMCStatus *status = &(((CMainFrame*)AfxGetMainWnd())->m_wndStatusBar);
+		status->SetFontHeight(m_nYsize);
 
         POSITION pos = GetFirstViewPosition();
         while ( pos) {
             CView* pView = GetNextView(pos);
-            CRect rect;
+			CRect rect;
             pView->GetClientRect(&rect);
             pView->SendMessage(WM_SIZE, 0, MAKELPARAM(rect.Width(), rect.Height()) );
             pView->InvalidateRect(NULL, FALSE);
             pView->UpdateWindow();
         }
+
+		((CMainFrame*)AfxGetMainWnd())->RecalcLayout();
     }
 }
 

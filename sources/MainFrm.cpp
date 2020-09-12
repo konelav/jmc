@@ -61,6 +61,16 @@ CJMCStatus::CJMCStatus()
     m_bmpConnected.LoadBitmap (IDB_CONNECTED);
     m_bmpLogged.LoadBitmap (IDB_LOGGED);
     m_bmpMarked.LoadBitmap (IDB_MARKED);
+	m_nYsize = -1;
+}
+
+CSize CJMCStatus::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
+	CSize ret = CStatusBar::CalcFixedLayout( bStretch, bHorz );
+	if (m_nYsize > 0) {
+		CRect border = GetBorders();
+		ret.cy = m_nYsize + border.top + border.bottom;
+	}
+	return ret;
 }
 
 extern int LengthWithoutANSI(const wchar_t* str);

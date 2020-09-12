@@ -21,6 +21,7 @@ public:
     CString& CleanLine();
 	CString m_str;
 	void SetHistorySize(UINT size) ;
+	void SetFontHeight(int h) {m_nYsize = h;};
 	inline UINT GetHistorySize() {return m_nHistorySize;};
 	inline CStringList& GetHistory() {return m_History;};
     int m_nCurrItem;
@@ -35,6 +36,7 @@ protected:
 	UINT m_nHistorySize;
     BOOL m_bScrollMode;
     CString m_strSrollMask;
+	int m_nYsize;
 
     CStringList m_lstTabWords;
     POSITION m_posCurPos;
@@ -58,6 +60,7 @@ public:
     virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
+	virtual CSize CalcFixedLayout(BOOL bStretch, BOOL bHorz);
 // Implementation
 public:
 	virtual ~CEditBar();

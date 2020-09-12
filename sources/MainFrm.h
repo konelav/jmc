@@ -80,9 +80,14 @@ class CJMCStatus : public CStatusBar
 protected:
     CBitmap m_bmpConnected, m_bmpLogged, m_bmpMarked;
 
+protected:
+	int m_nYsize;
+
 public:    
     CJMCStatus();
+	void SetFontHeight(int h) {m_nYsize = h;};
     virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
+	virtual CSize CalcFixedLayout(BOOL bStretch, BOOL bHorz);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -98,6 +103,7 @@ protected: // create from serialization only
 // Attributes
 public:
     CEditBar m_editBar;
+	CJMCStatus  m_wndStatusBar;
 //vls-begin// multiple output
 //    COutputBar m_coolBar;
     COutputBar m_coolBar[MAX_OUTPUT];
@@ -133,7 +139,6 @@ public:
 #endif
 
 protected:  // control bar embedded members
-	CJMCStatus  m_wndStatusBar;
 	CToolBar    m_wndToolBar;
 
 // Generated message map functions
