@@ -159,6 +159,7 @@
 #define IDC_WRITE_LOG_AS_SHOWN_BY_SERVER 1121
 #define IDC_WRITE_LOG_AS_SEEN_BY_USER   1122
 #define IDC_HTML_TIMESTAMPS             1123
+#define IDC_TEXT_TIMESTAMPS             1124
 #define IDC_CHK_LINEWRAP                1127
 #define IDC_CHK_SELECTRECT              1128
 #define IDC_CHK_SHOWHIDDEN              1129

@@ -333,7 +333,7 @@ BEGIN
     PUSHBUTTON      "Отмена",IDCANCEL,269,36,50,14
 END
 
-IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 263, 126
+IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 263, 165
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -343,15 +343,15 @@ BEGIN
                     BS_AUTORADIOBUTTON,131,28,116,10
     GROUPBOX        "Открытие лога по умолчанию",IDC_STATIC,125,7,133,35,
                     WS_GROUP
-    GROUPBOX        "Формат",IDC_STATIC,10,7,112,86
+    GROUPBOX        "Формат",IDC_STATIC,10,7,112,100
     CONTROL         "RMA (паузы)",IDC_RMA_SUPPORT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,37,72,59,10
+                    WS_TABSTOP,37,85,59,10
     CONTROL         "Текст",IDC_LOGTYPE_TEXT,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,18,21,36,10
     CONTROL         "HTML",IDC_LOGTYPE_HTML,"Button",BS_AUTORADIOBUTTON,18,
-                    35,36,10
+                    48,36,10
     CONTROL         "Цвета ANSI",IDC_LOGTYPE_ANSI,"Button",
-                    BS_AUTORADIOBUTTON,17,60,55,10
+                    BS_AUTORADIOBUTTON,17,73,55,10
     CONTROL         "Добавлять заголовок",IDC_LOG_TITLE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,57,99,10
     GROUPBOX        "Содержимое лога",IDC_STATIC,125,47,133,46
@@ -361,10 +361,12 @@ BEGIN
     CONTROL         "Как увидел пользователь",IDC_WRITE_LOG_AS_SEEN_BY_USER,
                     "Button",BS_AUTORADIOBUTTON,129,81,129,9
     CONTROL         "Метки времени",IDC_HTML_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,37,46,73,10
-    COMBOBOX        IDC_LOG_CODEPAGE,101,94,157,64,CBS_DROPDOWNLIST | 
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,59,73,10
+    COMBOBOX        IDC_LOG_CODEPAGE,100,127,157,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Кодировка",IDC_STATIC,11,97,68,10
+    LTEXT           "Кодировка",IDC_STATIC,11,128,68,10
+    CONTROL         "Метки времени",IDC_TEXT_TIMESTAMPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,33,73,10
 END
 
 IDD_NEW_PROFILE DIALOG DISCARDABLE  0, 0, 166, 126
@@ -878,7 +880,6 @@ BEGIN
     IDD_LOG_PARAMS_PAGE, DIALOG
     BEGIN
         RIGHTMARGIN, 258
-        BOTTOMMARGIN, 123
     END
 
     IDD_PARAMS_PAGE, DIALOG
@@ -1414,6 +1415,8 @@ BEGIN
     COMBOBOX        IDC_LOG_CODEPAGE,101,94,132,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Code page",IDC_STATIC,11,97,68,10
+    CONTROL         "Timestamps",IDC_TEXT_TIMESTAMPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,33,52,10
 END
 
 IDD_SCRIPT_PAGE DIALOG DISCARDABLE  0, 0, 209, 98
