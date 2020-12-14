@@ -88,6 +88,7 @@ protected:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnCaptureChanged(CWnd *pWnd);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	//}}AFX_MSG
     afx_msg LONG OnLineEntered( UINT wParam, LONG lParam);
     // afx_msg LONG OnAddedDrowLine( UINT wParam, LONG lParam);
