@@ -968,8 +968,8 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 					NumOfLines(LengthWithoutANSI(str), m_nLineWidth) : 1;;
 	        }
             // check for splitted and head view 
-            if ( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) {
-                int OldPos = GetScrollPos(SB_VERT);
+            int OldPos = GetScrollPos(SB_VERT);
+            if (( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) || ((OldPos < (nScrollSize-m_nPageSize-1)) && pDoc->m_bStickScrollbar)) {
                 SetScrollPos(SB_VERT, OldPos-new_lines, TRUE);
             } else {
                 rectSmall.left = 0;
@@ -1011,8 +1011,17 @@ BOOL CSmcView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	if (pMainWnd == NULL)
 		return 0;
-
-	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
+	if (pDoc->m_bStickScrollbar){
+		WPARAM wParam;
+		if (GetKeyState(VK_CONTROL)&0x8000) {
+			wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+		}
+		else {
+			wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+		}
+		OnVScroll(wParam, 0, 0);
+	}
+	else if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
 	{
 		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
 		OnVScroll(wParam, 0, 0);

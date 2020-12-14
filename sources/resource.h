@@ -171,6 +171,7 @@
 #define IDC_DISPLAY_TIMESTAMPS          1135
 #define IDC_MUD_CODEPAGE                1136
 #define IDC_LOG_CODEPAGE                1137
+#define IDC_DISPLAY_STICK_SCROLLBAR     1137
 #define ID_OPTIONS_SCROLLBUFFER         32771
 #define ID_OPTIONS_FONT                 32772
 #define ID_OPTIONS_HOTKEYS              32774
