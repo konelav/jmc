@@ -425,6 +425,11 @@ void write_command(wchar_t *arg)
             wcscpy(buffer+1, L"message mapper OFF\n");
             set_lines += buffer;
         }
+		if ( !mesvar[MSG_TAB] ) {
+            buffer[0] = cCommandChar ;
+            wcscpy(buffer+1, L"message tab OFF\n");
+            set_lines += buffer;
+        }
 
         // save togglesub/echo/multiaction etc states 
         buffer[0] = cCommandChar ;

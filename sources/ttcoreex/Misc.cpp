@@ -299,7 +299,7 @@ void message_command(wchar_t *arg)
 //  char ms[8][20], tpstr[80];
 //* en:logs
 //  char ms[9][20], tpstr[80];
-  wchar_t ms[MSG_MAXNUM][20], tpstr[80];
+  wchar_t tpstr[80];
 //*/en
 //vls-end//
     wchar_t type[BUFFER_SIZE], flag[BUFFER_SIZE];
@@ -307,14 +307,8 @@ void message_command(wchar_t *arg)
   arg = get_arg_in_braces(arg,type,STOP_SPACES,sizeof(type)/sizeof(wchar_t)-1);
   arg = get_arg_in_braces(arg,flag,STOP_SPACES,sizeof(flag)/sizeof(wchar_t)-1);
 
-  memset(ms, 0, sizeof(ms));
-  
-  const wchar_t messages[] = L"aliases actions substitutes antisubstitutes highlights variables groups hotkeys uses logs telnet oob mapper";
-  swscanf(messages, L"%ls %ls %ls %ls %ls %ls %ls %ls %ls %ls %ls %ls %ls",
-	  ms[0],ms[1],ms[2],ms[3],ms[4],ms[5],ms[6], ms[7], ms[8], ms[9], ms[10], ms[11], ms[12]);
- 
   mestype=0;
-  while (!is_abrev(type,ms[mestype]) && mestype< MSG_MAXNUM ) 
+  while (mestype < MSG_MAXNUM && !is_abrev(type,MSG_TYPE_NAMES[mestype]) ) 
     mestype++;
   if (mestype==MSG_MAXNUM)
     tintin_puts2(rs::rs(1108));
@@ -331,7 +325,7 @@ void message_command(wchar_t *arg)
     wcscpy(t1, mesvar[mestype] ? rs::rs(1125) : rs::rs(1126));
     
     swprintf(tpstr,rs::rs(1109),
-        ms[mestype],t1);
+        MSG_TYPE_NAMES[mestype],t1);
     delete[]t1;
     tintin_puts2(tpstr);
   }
@@ -503,7 +497,8 @@ void tabadd_command(wchar_t* arg)
     PostMessage(hwndMAIN, WM_USER+200, 0, (LPARAM)hg);
     wchar_t msg[BUFFER_SIZE];
     swprintf(msg,rs::rs(1139), word);
-    tintin_puts2(msg);
+	if (mesvar[MSG_TAB])
+		tintin_puts2(msg);
 }
 
 void tabdel_command(wchar_t* arg)
@@ -523,7 +518,8 @@ void tabdel_command(wchar_t* arg)
     PostMessage(hwndMAIN, WM_USER+201, 0, (LPARAM)hg);
     wchar_t msg[BUFFER_SIZE];
     swprintf(msg,rs::rs(1141), word);
-    tintin_puts2(msg);
+	if (mesvar[MSG_TAB])
+		tintin_puts2(msg);
 }
 
 LONG  DLLEXPORT GetCommandsList(wchar_t *List)

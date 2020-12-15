@@ -79,6 +79,7 @@ using namespace std;
 #define DEFAULT_TELNET_MESS FALSE
 #define DEFAULT_OOB_MESS TRUE
 #define DEFAULT_MAPPER_MESS TRUE
+#define DEFAULT_TAB_MESS TRUE
 
 enum {
     MSG_ALIAS = 0, 
@@ -94,8 +95,25 @@ enum {
 	MSG_TELNET,
 	MSG_MUD_OOB,
 	MSG_MAPPER,
+	MSG_TAB,
 
 	MSG_MAXNUM
+};
+static const wchar_t *MSG_TYPE_NAMES[MSG_MAXNUM] = {
+	L"aliases",
+	L"actions",
+	L"substitutes",
+	L"antisubstitutes",
+	L"highlights",
+	L"variables",
+	L"groups",
+	L"hotkeys",
+	L"uses",
+	L"logs",
+	L"telnet",
+	L"oob",
+	L"mapper",
+	L"tabs"
 };
 
 /**************************************************************************/

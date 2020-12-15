@@ -48,6 +48,7 @@ void  newactive_session()
 	mesvar[MSG_TELNET]=DEFAULT_TELNET_MESS;
 	mesvar[MSG_MUD_OOB]=DEFAULT_OOB_MESS;
 	mesvar[MSG_MAPPER]=DEFAULT_MAPPER_MESS;
+	mesvar[MSG_TAB]=DEFAULT_TAB_MESS;
 }
 
 
