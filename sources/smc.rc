@@ -343,7 +343,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,131,28,116,10
     GROUPBOX        "Открытие лога по умолчанию",IDC_STATIC,125,7,133,35,
                     WS_GROUP
-    GROUPBOX        "Формат",IDC_STATIC,10,7,112,100
+    GROUPBOX        "Формат",IDC_STATIC,10,7,112,95
     CONTROL         "RMA (паузы)",IDC_RMA_SUPPORT,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,37,85,59,10
     CONTROL         "Текст",IDC_LOGTYPE_TEXT,"Button",BS_AUTORADIOBUTTON | 
@@ -361,7 +361,7 @@ BEGIN
     CONTROL         "Как увидел пользователь",IDC_WRITE_LOG_AS_SEEN_BY_USER,
                     "Button",BS_AUTORADIOBUTTON,129,81,129,9
     CONTROL         "Метки времени",IDC_HTML_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,37,59,73,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,60,73,10
     COMBOBOX        IDC_LOG_CODEPAGE,100,127,157,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Кодировка",IDC_STATIC,11,128,68,10
@@ -691,8 +691,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,1,5
- PRODUCTVERSION 3,7,1,5
+ FILEVERSION 3,7,1,6
+ PRODUCTVERSION 3,7,1,6
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -710,9 +710,9 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC MUD-клиент\0"
-            VALUE "FileVersion", "3, 7, 1, 5\0"
+            VALUE "FileVersion", "3, 7, 1, 6\0"
             VALUE "InternalName", "JMC\0"
-            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016\0"
+            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2020\0"
             VALUE "LegalTrademarks", "JMC\0"
             VALUE "OriginalFilename", "JMC.EXE\0"
             VALUE "PrivateBuild", "\0"
@@ -1388,7 +1388,7 @@ BEGIN
     PUSHBUTTON      "Standard",IDC_RESTORE_DEFAULT,184,42,50,14
 END
 
-IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 246, 126
+IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 246, 127
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1397,15 +1397,15 @@ BEGIN
     CONTROL         "Append",IDC_APPEND_LOG_MODE,"Button",BS_AUTORADIOBUTTON,
                     131,28,58,10
     GROUPBOX        "Default writing",IDC_STATIC,125,8,107,35,WS_GROUP
-    GROUPBOX        "Log format",IDC_STATIC,10,7,112,86
+    GROUPBOX        "Log format",IDC_STATIC,10,7,112,88
     CONTROL         "Write RMA",IDC_RMA_SUPPORT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,37,72,49,10
+                    WS_TABSTOP,37,82,49,10
     CONTROL         "Text",IDC_LOGTYPE_TEXT,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,18,21,30,10
     CONTROL         "HTML",IDC_LOGTYPE_HTML,"Button",BS_AUTORADIOBUTTON,18,
-                    35,36,10
+                    44,36,10
     CONTROL         "ANSI (+Esc colors)",IDC_LOGTYPE_ANSI,"Button",
-                    BS_AUTORADIOBUTTON,17,60,75,10
+                    BS_AUTORADIOBUTTON,17,68,75,10
     CONTROL         "Append log title",IDC_LOG_TITLE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,57,99,10
     GROUPBOX        "Log contents",IDC_STATIC,125,47,107,46
@@ -1415,12 +1415,12 @@ BEGIN
     CONTROL         "As seen by User",IDC_WRITE_LOG_AS_SEEN_BY_USER,"Button",
                     BS_AUTORADIOBUTTON,129,81,99,9
     CONTROL         "Timestamps",IDC_HTML_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,37,46,52,10
-    COMBOBOX        IDC_LOG_CODEPAGE,101,94,132,64,CBS_DROPDOWNLIST | 
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,55,52,10
+    COMBOBOX        IDC_LOG_CODEPAGE,101,102,132,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Code page",IDC_STATIC,11,97,68,10
+    LTEXT           "Code page",IDC_STATIC,11,105,68,10
     CONTROL         "Timestamps",IDC_TEXT_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,37,33,52,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,37,32,52,10
 END
 
 IDD_SCRIPT_PAGE DIALOG DISCARDABLE  0, 0, 209, 98
@@ -1703,8 +1703,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,1,0
- PRODUCTVERSION 3,7,1,0
+ FILEVERSION 3,7,1,6
+ PRODUCTVERSION 3,7,1,6
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1722,9 +1722,9 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC application\0"
-            VALUE "FileVersion", "3, 7, 1, 0\0"
+            VALUE "FileVersion", "3, 7, 1, 6\0"
             VALUE "InternalName", "JMC\0"
-            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016\0"
+            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2020\0"
             VALUE "LegalTrademarks", "JMC\0"
             VALUE "OriginalFilename", "JMC.EXE\0"
             VALUE "PrivateBuild", "\0"
@@ -1872,7 +1872,7 @@ BEGIN
     IDD_LOG_PARAMS_PAGE, DIALOG
     BEGIN
         RIGHTMARGIN, 241
-        BOTTOMMARGIN, 123
+        BOTTOMMARGIN, 124
     END
 
     IDD_JMC_ACTIONS, DIALOG
