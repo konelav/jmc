@@ -535,7 +535,7 @@ CSize CEditBar::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
 	CSize ret = CDialogBar::CalcFixedLayout( bStretch, bHorz );
 	if (m_nYsize > 0) {
 		CRect border = GetBorders();
-		ret.cy = m_nYsize + border.top + border.bottom;
+		ret.cy = m_nYsize + border.top + border.bottom + 2;
 	}
 	return ret;
 }

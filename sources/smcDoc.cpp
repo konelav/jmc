@@ -811,14 +811,15 @@ void CSmcDoc::RecalcCharSize()
     dc.CreateDC(L"display" , NULL , NULL, NULL);
     CFont* pOldFont = dc.SelectObject(&m_fntText);
 
-    CSize size = dc.GetTextExtent(L"A");
+    CSize size_x = dc.GetTextExtent(L"W");
+	CSize size_y = dc.GetTextExtent(L"Iqg");
     
     dc.SelectObject(pOldFont);
 
     dc.DeleteDC();
 
-	m_nYsize = size.cy;
-    m_nCharX = size.cx;
+	m_nYsize = size_y.cy;
+    m_nCharX = size_x.cx;
 }
 
 void CSmcDoc::OnOptionsFont() 
