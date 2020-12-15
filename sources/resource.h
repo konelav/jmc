@@ -159,6 +159,7 @@
 #define IDC_WRITE_LOG_AS_SHOWN_BY_SERVER 1121
 #define IDC_WRITE_LOG_AS_SEEN_BY_USER   1122
 #define IDC_HTML_TIMESTAMPS             1123
+#define IDC_TEXT_TIMESTAMPS             1124
 #define IDC_CHK_LINEWRAP                1127
 #define IDC_CHK_SELECTRECT              1128
 #define IDC_CHK_SHOWHIDDEN              1129
@@ -170,6 +171,7 @@
 #define IDC_DISPLAY_TIMESTAMPS          1135
 #define IDC_MUD_CODEPAGE                1136
 #define IDC_LOG_CODEPAGE                1137
+#define IDC_DISPLAY_STICK_SCROLLBAR     1137
 #define ID_OPTIONS_SCROLLBUFFER         32771
 #define ID_OPTIONS_FONT                 32772
 #define ID_OPTIONS_HOTKEYS              32774
