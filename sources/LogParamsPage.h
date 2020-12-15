@@ -31,9 +31,11 @@ public:
 	CButton	m_RmaSupportControl;
 	CButton	m_HtmlTimestampsControl;
 	CButton	m_logTypeControl;
+	CButton	m_TextTimestampsControl;
 	BOOL	m_bRMASupport;
 	BOOL	m_bHTMLTimestamps;
 	BOOL	m_bAppendLogTitle;
+	BOOL	m_bTextTimestamps;
 	int		m_nAppendMode;
 	int		m_nLogAs;
 	int		m_logTypeHtml;

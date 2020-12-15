@@ -83,6 +83,7 @@ public:
 	BOOL m_bRemoveESCSelection;
 	BOOL m_bLineWrap;
 	BOOL m_bShowTimestamps;
+	BOOL m_bStickScrollbar;
 	BOOL m_bShowHiddenText;
     void RecalcCharSize();
 

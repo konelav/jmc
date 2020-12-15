@@ -286,7 +286,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_UNSPLIT, OnUnsplit)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_EDIT_JMCOBJECTS, OnEditJmcobjects)
-	ON_WM_MOUSEWHEEL()
 	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
     ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECTED, OnUpdateConnected)
@@ -609,6 +608,7 @@ void CMainFrame::OnOptionsOptions()
     pg1.m_nTrigDelay = MoreComingDelay;
 	pg1.m_bLineWrap = pDoc->m_bLineWrap;
 	pg1.m_bShowTimestamps = pDoc->m_bShowTimestamps;
+	pg1.m_bStickScrollbar = pDoc->m_bStickScrollbar;
 	pg1.m_bSelectRect = pDoc->m_bRectangleSelection;
 	pg1.m_bRemoveESC = pDoc->m_bRemoveESCSelection;
 	pg1.m_bShowHidden = pDoc->m_bShowHiddenText;
@@ -658,6 +658,7 @@ void CMainFrame::OnOptionsOptions()
     pg4.m_nAppendMode = bDefaultLogMode ? 1 : 0 ;
     pg4.m_bAppendLogTitle = bAppendLogTitle;
 	pg4.m_bHTMLTimestamps = bHTML ? bHTMLTimestamps : FALSE;
+	pg4.m_bTextTimestamps = bDefaultLogMode ? bTextTimestamps : FALSE;
 	pg4.m_nLogAs = bLogAsUserSeen ? 1 : 0;
 
 	pg4.m_nLogCodePage = LogCodePage;
@@ -697,6 +698,7 @@ void CMainFrame::OnOptionsOptions()
             OnUnsplit();
 		pDoc->m_bLineWrap = pg1.m_bLineWrap;
 		pDoc->m_bShowTimestamps = pg1.m_bShowTimestamps;
+		pDoc->m_bStickScrollbar = pg1.m_bStickScrollbar;
 		pDoc->m_bRectangleSelection = pg1.m_bSelectRect;
 		pDoc->m_bRemoveESCSelection = pg1.m_bRemoveESC;
 		pDoc->m_bShowHiddenText = pg1.m_bShowHidden;
@@ -725,6 +727,7 @@ void CMainFrame::OnOptionsOptions()
         bHTML = pg4.m_LogType == 1; 
 		bHTMLTimestamps = bHTML ? pg4.m_bHTMLTimestamps : FALSE;
         bRMASupport = bANSILog ? pg4.m_bRMASupport : FALSE;
+		bTextTimestamps = bDefaultLogMode ? pg4.m_bTextTimestamps : FALSE;
         bDefaultLogMode = pg4.m_nAppendMode ;
 		bLogAsUserSeen = pg4.m_nLogAs;
         bAppendLogTitle = pg4.m_bAppendLogTitle;
@@ -1596,34 +1599,33 @@ LONG CMainFrame::OnSizeWOutput(UINT wParam, LONG lParam)
 //*/en
 
 //vls-begin// mouse wheel
-BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
-{
-	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))
-        return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);
-
-    CWnd* pWnd = m_wndSplitter.GetPane(0, 0 );
-    WPARAM wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
-	if(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_MENU)&0x8000)
-		wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
-
-    if (zDelta > 0) 
-        if ( m_wndSplitter.GetRowCount() == 1 && pDoc->m_bSplitOnBackscroll )
-            m_wndSplitter.SplitRow();
-
-	if ( pWnd )
-        pWnd->SendMessage(WM_VSCROLL , wParam, 0);
-
-    if (zDelta < 0) 
-	{
-        int minpos, maxpos, pos;
-        pWnd->GetScrollRange(SB_VERT, &minpos, &maxpos);
-        pos = pWnd->GetScrollPos(SB_VERT);
-        if ( pos == maxpos ) 
-            OnUnsplit() ;
-    }
-	
-	return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);
-}
+//DEL BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+//DEL {
+//DEL 	if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))
+//DEL         return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);
+//DEL     CWnd* pWnd = m_wndSplitter.GetPane(0, 0 );
+//DEL     WPARAM wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+//DEL 	if(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_MENU)&0x8000)
+//DEL 		wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+//DEL 
+//DEL     if (zDelta > 0) 
+//DEL         if ( m_wndSplitter.GetRowCount() == 1 && pDoc->m_bSplitOnBackscroll )
+//DEL             m_wndSplitter.SplitRow();
+//DEL 
+//DEL 	if ( pWnd )
+//DEL         pWnd->SendMessage(WM_VSCROLL , wParam, 0);
+//DEL 
+//DEL     if (zDelta < 0) 
+//DEL 	{
+//DEL         int minpos, maxpos, pos;
+//DEL         pWnd->GetScrollRange(SB_VERT, &minpos, &maxpos);
+//DEL         pos = pWnd->GetScrollPos(SB_VERT);
+//DEL         if ( pos == maxpos ) 
+//DEL             OnUnsplit() ;
+//DEL     }
+//DEL 	
+//DEL 	return CFrameWnd::OnMouseWheel(nFlags, zDelta, pt);//There should be no internal forwarding of the message!!! Possible error
+//DEL }
 //vls-end//
 
 LONG CMainFrame::OnTrayMessage(UINT wParam, LONG lParam)
@@ -1678,3 +1680,4 @@ void CMainFrame::OnSysCommand(UINT wParam, LPARAM lParam){
 	if(wParam==SC_KEYMENU && (lParam>>16)<=0) return;
 	CFrameWnd::OnSysCommand(wParam, lParam);
 }
+

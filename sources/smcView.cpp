@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CSmcView, CView)
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
+	ON_WM_MOUSEWHEEL()
 	//}}AFX_MSG_MAP
     ON_MESSAGE(WM_USER+100, OnLineEntered)
 //    ON_MESSAGE(WM_USER+101, OnAddedDrowLine)
@@ -967,8 +968,8 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 					NumOfLines(LengthWithoutANSI(str), m_nLineWidth) : 1;;
 	        }
             // check for splitted and head view 
-            if ( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) {
-                int OldPos = GetScrollPos(SB_VERT);
+            int OldPos = GetScrollPos(SB_VERT);
+            if (( pMainWnd->m_wndSplitter.GetRowCount () > 1 && pMainWnd->m_wndSplitter.GetPane(0,0) == this ) || ((OldPos < (nScrollSize-m_nPageSize-1)) && pDoc->m_bStickScrollbar)) {
                 SetScrollPos(SB_VERT, OldPos-new_lines, TRUE);
             } else {
                 rectSmall.left = 0;
@@ -1004,4 +1005,50 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         break;
     }
 	
+}
+
+BOOL CSmcView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	if (pMainWnd == NULL)
+		return 0;
+	if (pDoc->m_bStickScrollbar){
+		WPARAM wParam;
+		if (GetKeyState(VK_CONTROL)&0x8000) {
+			wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+		}
+		else {
+			wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+		}
+		OnVScroll(wParam, 0, 0);
+	}
+	else if (!(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_CONTROL)&0x8000 || GetKeyState(VK_MENU)&0x8000))\
+	{
+		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+		OnVScroll(wParam, 0, 0);
+	}
+	else
+	{
+	    CWnd* pWnd = pMainWnd->m_wndSplitter.GetPane(0, 0 );
+		WPARAM wParam = MAKELONG(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, 0);
+		if(GetKeyState(VK_SHIFT)&0x8000 || GetKeyState(VK_MENU)&0x8000)
+			wParam = MAKELONG(zDelta < 0 ? SB_LINEDOWN : SB_LINEUP, 0);
+
+	    if (zDelta > 0) 
+		    if ( pMainWnd->m_wndSplitter.GetRowCount() == 1 && pDoc->m_bSplitOnBackscroll )
+			    pMainWnd->m_wndSplitter.SplitRow();
+
+		if ( pWnd )
+		    pWnd->SendMessage(WM_VSCROLL , wParam, 0);
+
+	    if (zDelta < 0) 
+		{
+			int minpos, maxpos, pos;
+	        pWnd->GetScrollRange(SB_VERT, &minpos, &maxpos);
+		    pos = pWnd->GetScrollPos(SB_VERT);
+			if ( pos == maxpos ) 
+				pMainWnd->PostMessage(WM_COMMAND, 0x10000|ID_UNSPLIT, 0);
+	    }
+	}
+	
+	return 0;
 }

@@ -570,7 +570,9 @@ wstring processTEXT(wstring strInput)
 wstring processLine(const wchar_t *charInput, DWORD TimeStamp)
 {
 	wstring strInput(charInput), strOutput;
-	
+	SYSTEMTIME stl;
+	WCHAR buf[100];
+
 	if (bCurLogHTML) {
 		// parse line to HTML
 		strOutput = processHTML(strInput, TimeStamp);
@@ -582,6 +584,14 @@ wstring processLine(const wchar_t *charInput, DWORD TimeStamp)
 	} else {
 		// strip all Esc-sequences
 		strOutput = processTEXT(strInput);
+		
+		if (bTextTimestamps) {
+
+			GetLocalTime(&stl);
+
+			wsprintfW(buf, L"[%02d:%02d:%02d] ", stl.wHour, stl.wMinute, stl.wSecond);
+			strOutput = buf + strOutput;
+		}
 	}
 
 	return strOutput;

@@ -150,7 +150,6 @@ protected:
 	afx_msg void OnUnsplit();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnEditJmcobjects();
-	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	//}}AFX_MSG
     afx_msg void OnUpdateLogged(CCmdUI* pUI);
     afx_msg void OnUpdateConnected(CCmdUI* pUI);

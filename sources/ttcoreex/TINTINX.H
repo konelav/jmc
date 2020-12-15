@@ -107,6 +107,7 @@ extern BOOL DLLEXPORT bHTMLTimestamps;
 extern BOOL DLLEXPORT bLogAsUserSeen;
 extern BOOL DLLEXPORT bAllowDebug;
 extern BOOL DLLEXPORT bIACSendSingle, bIACReciveSingle;
+extern BOOL DLLEXPORT bTextTimestamps;
 extern int DLLEXPORT nScripterrorOutput;
 
 extern int DLLEXPORT MoreComingDelay;
