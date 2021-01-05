@@ -489,7 +489,7 @@ void tabadd_command(wchar_t* arg)
         return;
     }
 
-    HGLOBAL hg = GlobalAlloc(GHND, wcslen(word)+2);
+    HGLOBAL hg = GlobalAlloc(GHND, (wcslen(word)+1)*sizeof(wchar_t));
     wchar_t* p = (wchar_t*)GlobalLock(hg);
     wcscpy(p, word);
     GlobalUnlock (hg);
@@ -510,7 +510,7 @@ void tabdel_command(wchar_t* arg)
         return;
     }
 
-    HGLOBAL hg = GlobalAlloc(GHND, wcslen(word)+2);
+    HGLOBAL hg = GlobalAlloc(GHND, (wcslen(word)+1)*sizeof(wchar_t));
     wchar_t* p = (wchar_t*)GlobalLock(hg);
     wcscpy(p, word);
     GlobalUnlock (hg);

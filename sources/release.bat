@@ -1,6 +1,8 @@
-@echo off
+@echo off 
 
 SET release=jmc%1
+
+del %release%.zip
 
 mkdir %release%
 copy jmc.exe %release%

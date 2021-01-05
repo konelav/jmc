@@ -691,8 +691,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,1,6
- PRODUCTVERSION 3,7,1,6
+ FILEVERSION 3,7,1,7
+ PRODUCTVERSION 3,7,1,7
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -710,9 +710,9 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC MUD-êëèåíò\0"
-            VALUE "FileVersion", "3, 7, 1, 6\0"
+            VALUE "FileVersion", "3, 7, 1, 7\0"
             VALUE "InternalName", "JMC\0"
-            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2020\0"
+            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2021\0"
             VALUE "LegalTrademarks", "JMC\0"
             VALUE "OriginalFilename", "JMC.EXE\0"
             VALUE "PrivateBuild", "\0"
@@ -1703,8 +1703,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,1,6
- PRODUCTVERSION 3,7,1,6
+ FILEVERSION 3,7,1,7
+ PRODUCTVERSION 3,7,1,7
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1722,9 +1722,9 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC application\0"
-            VALUE "FileVersion", "3, 7, 1, 6\0"
+            VALUE "FileVersion", "3, 7, 1, 7\0"
             VALUE "InternalName", "JMC\0"
-            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2020\0"
+            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2021\0"
             VALUE "LegalTrademarks", "JMC\0"
             VALUE "OriginalFilename", "JMC.EXE\0"
             VALUE "PrivateBuild", "\0"

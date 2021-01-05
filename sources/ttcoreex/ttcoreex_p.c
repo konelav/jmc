@@ -2,9 +2,9 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Wed Apr 27 16:43:10 2016
+/* at Tue Jan 05 04:02:39 2021
  */
-/* Compiler settings for D:\github\jmc\jmc-msvs6\sources\ttcoreex\ttcoreex.idl:
+/* Compiler settings for C:\mud\jmc\sources\ttcoreex\ttcoreex.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
     error checks: allocation ref bounds_check enum stub_data 
 */
@@ -28,7 +28,7 @@
 #include "ttcoreex.h"
 
 #define TYPE_FORMAT_STRING_SIZE   1021                              
-#define PROC_FORMAT_STRING_SIZE   779                               
+#define PROC_FORMAT_STRING_SIZE   1091                              
 
 typedef struct _MIDL_TYPE_FORMAT_STRING
     {
@@ -105,6 +105,332 @@ extern const MIDL_STUB_DESC Object_StubDesc;
 extern const MIDL_SERVER_INFO IJmcObj_ServerInfo;
 
 #pragma code_seg(".orpc")
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_wGetWidth_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ LONG wndNum,
+    /* [retval][out] */ LONG __RPC_FAR *nWidth)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,nWidth);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[778],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[778],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&wndNum,
+                  ( unsigned char __RPC_FAR * )&nWidth);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[778],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_wGetHeight_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ LONG wndNum,
+    /* [retval][out] */ LONG __RPC_FAR *nHeight)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,nHeight);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[812],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[812],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&wndNum,
+                  ( unsigned char __RPC_FAR * )&nHeight);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[812],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_DoTelnet_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ LONG Command,
+    /* [optional][in] */ LONG Option,
+    /* [optional][in] */ BSTR bstrData)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrData);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[846],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[846],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&Command,
+                  ( unsigned char __RPC_FAR * )&Option,
+                  ( unsigned char __RPC_FAR * )&bstrData);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[846],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_ToText_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrANSI,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrText)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrText);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[886],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[886],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrANSI,
+                  ( unsigned char __RPC_FAR * )&bstrText);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[886],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_ToColored_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrANSI,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrColored)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrColored);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[920],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[920],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrANSI,
+                  ( unsigned char __RPC_FAR * )&bstrColored);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[920],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_FromColored_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrColored,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrANSI)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrANSI);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[954],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[954],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrColored,
+                  ( unsigned char __RPC_FAR * )&bstrANSI);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[954],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_MSDP2GMCP_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrMSDP,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrGMCP)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrGMCP);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[988],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[988],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrMSDP,
+                  ( unsigned char __RPC_FAR * )&bstrGMCP);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[988],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_GMCP2MSDP_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrGMCP,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrMSDP)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrMSDP);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1022],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1022],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrGMCP,
+                  ( unsigned char __RPC_FAR * )&bstrMSDP);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1022],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_MSSP2GMCP_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ BSTR bstrMSSP,
+    /* [retval][out] */ BSTR __RPC_FAR *bstrGMCP)
+{
+CLIENT_CALL_RETURN _RetVal;
+
+
+#if defined( _ALPHA_ )
+    va_list vlist;
+#endif
+    
+#if defined( _ALPHA_ )
+    va_start(vlist,bstrGMCP);
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1056],
+                  vlist.a0);
+#elif defined( _PPC_ ) || defined( _MIPS_ )
+
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1056],
+                  ( unsigned char __RPC_FAR * )&This,
+                  ( unsigned char __RPC_FAR * )&bstrMSSP,
+                  ( unsigned char __RPC_FAR * )&bstrGMCP);
+#else
+    _RetVal = NdrClientCall2(
+                  ( PMIDL_STUB_DESC  )&Object_StubDesc,
+                  (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[1056],
+                  ( unsigned char __RPC_FAR * )&This);
+#endif
+    return ( HRESULT  )_RetVal.Simple;
+    
+}
+
 extern const USER_MARSHAL_ROUTINE_QUADRUPLE UserMarshalRoutines[2];
 
 static const MIDL_STUB_DESC Object_StubDesc = 
@@ -161,7 +487,16 @@ static const unsigned short IJmcObj_FormatStringOffsetTable[] =
     654,
     676,
     710,
-    738
+    738,
+    778,
+    812,
+    846,
+    886,
+    920,
+    954,
+    988,
+    1022,
+    1056
     };
 
 static const MIDL_SERVER_INFO IJmcObj_ServerInfo = 
@@ -186,7 +521,7 @@ static const MIDL_STUBLESS_PROXY_INFO IJmcObj_ProxyInfo =
     0
     };
 
-CINTERFACE_PROXY_VTABLE(32) _IJmcObjProxyVtbl = 
+CINTERFACE_PROXY_VTABLE(41) _IJmcObjProxyVtbl = 
 {
     &IJmcObj_ProxyInfo,
     &IID_IJmcObj,
@@ -221,7 +556,16 @@ CINTERFACE_PROXY_VTABLE(32) _IJmcObjProxyVtbl =
     (void *)-1 /* IJmcObj::Quit */ ,
     (void *)-1 /* IJmcObj::Run */ ,
     (void *)-1 /* IJmcObj::Play */ ,
-    (void *)-1 /* IJmcObj::wOutput */
+    (void *)-1 /* IJmcObj::wOutput */ ,
+    IJmcObj_wGetWidth_Proxy ,
+    IJmcObj_wGetHeight_Proxy ,
+    IJmcObj_DoTelnet_Proxy ,
+    IJmcObj_ToText_Proxy ,
+    IJmcObj_ToColored_Proxy ,
+    IJmcObj_FromColored_Proxy ,
+    IJmcObj_MSDP2GMCP_Proxy ,
+    IJmcObj_GMCP2MSDP_Proxy ,
+    IJmcObj_MSSP2GMCP_Proxy
 };
 
 
@@ -255,6 +599,15 @@ static const PRPC_STUB_FUNCTION IJmcObj_table[] =
     NdrStubCall2,
     NdrStubCall2,
     NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
+    NdrStubCall2,
     NdrStubCall2
 };
 
@@ -262,7 +615,7 @@ CInterfaceStubVtbl _IJmcObjStubVtbl =
 {
     &IID_IJmcObj,
     &IJmcObj_ServerInfo,
-    32,
+    41,
     &IJmcObj_table[-3],
     CStdStubBuffer_DELEGATING_METHODS
 };
@@ -1368,6 +1721,445 @@ static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =
 			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
 #endif
 /* 776 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure wGetWidth */
+
+/* 778 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 780 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 784 */	NdrFcShort( 0x20 ),	/* 32 */
+#ifndef _ALPHA_
+/* 786 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 788 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 790 */	NdrFcShort( 0x10 ),	/* 16 */
+/* 792 */	0x4,		/* Oi2 Flags:  has return, */
+			0x3,		/* 3 */
+
+	/* Parameter wndNum */
+
+/* 794 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
+#ifndef _ALPHA_
+/* 796 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 798 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Parameter nWidth */
+
+/* 800 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 802 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 804 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Return value */
+
+/* 806 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 808 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 810 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure wGetHeight */
+
+/* 812 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 814 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 818 */	NdrFcShort( 0x21 ),	/* 33 */
+#ifndef _ALPHA_
+/* 820 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 822 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 824 */	NdrFcShort( 0x10 ),	/* 16 */
+/* 826 */	0x4,		/* Oi2 Flags:  has return, */
+			0x3,		/* 3 */
+
+	/* Parameter wndNum */
+
+/* 828 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
+#ifndef _ALPHA_
+/* 830 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 832 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Parameter nHeight */
+
+/* 834 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 836 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 838 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Return value */
+
+/* 840 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 842 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 844 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure DoTelnet */
+
+/* 846 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 848 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 852 */	NdrFcShort( 0x22 ),	/* 34 */
+#ifndef _ALPHA_
+/* 854 */	NdrFcShort( 0x14 ),	/* x86, MIPS, PPC Stack size/offset = 20 */
+#else
+			NdrFcShort( 0x28 ),	/* Alpha Stack size/offset = 40 */
+#endif
+/* 856 */	NdrFcShort( 0x10 ),	/* 16 */
+/* 858 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 860 */	0x6,		/* Oi2 Flags:  clt must size, has return, */
+			0x4,		/* 4 */
+
+	/* Parameter Command */
+
+/* 862 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
+#ifndef _ALPHA_
+/* 864 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 866 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Parameter Option */
+
+/* 868 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
+#ifndef _ALPHA_
+/* 870 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 872 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Parameter bstrData */
+
+/* 874 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 876 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 878 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Return value */
+
+/* 880 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 882 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 884 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure ToText */
+
+/* 886 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 888 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 892 */	NdrFcShort( 0x23 ),	/* 35 */
+#ifndef _ALPHA_
+/* 894 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 896 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 898 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 900 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrANSI */
+
+/* 902 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 904 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 906 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrText */
+
+/* 908 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 910 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 912 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 914 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 916 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 918 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure ToColored */
+
+/* 920 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 922 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 926 */	NdrFcShort( 0x24 ),	/* 36 */
+#ifndef _ALPHA_
+/* 928 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 930 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 932 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 934 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrANSI */
+
+/* 936 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 938 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 940 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrColored */
+
+/* 942 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 944 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 946 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 948 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 950 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 952 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure FromColored */
+
+/* 954 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 956 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 960 */	NdrFcShort( 0x25 ),	/* 37 */
+#ifndef _ALPHA_
+/* 962 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 964 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 966 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 968 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrColored */
+
+/* 970 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 972 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 974 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrANSI */
+
+/* 976 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 978 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 980 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 982 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 984 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 986 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure MSDP2GMCP */
+
+/* 988 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 990 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 994 */	NdrFcShort( 0x26 ),	/* 38 */
+#ifndef _ALPHA_
+/* 996 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 998 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 1000 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 1002 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrMSDP */
+
+/* 1004 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 1006 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 1008 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrGMCP */
+
+/* 1010 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 1012 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 1014 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 1016 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 1018 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 1020 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure GMCP2MSDP */
+
+/* 1022 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 1024 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 1028 */	NdrFcShort( 0x27 ),	/* 39 */
+#ifndef _ALPHA_
+/* 1030 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 1032 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 1034 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 1036 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrGMCP */
+
+/* 1038 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 1040 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 1042 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrMSDP */
+
+/* 1044 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 1046 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 1048 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 1050 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 1052 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 1054 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure MSSP2GMCP */
+
+/* 1056 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 1058 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 1062 */	NdrFcShort( 0x28 ),	/* 40 */
+#ifndef _ALPHA_
+/* 1064 */	NdrFcShort( 0x10 ),	/* x86, MIPS, PPC Stack size/offset = 16 */
+#else
+			NdrFcShort( 0x20 ),	/* Alpha Stack size/offset = 32 */
+#endif
+/* 1066 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 1068 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 1070 */	0x7,		/* Oi2 Flags:  srv must size, clt must size, has return, */
+			0x3,		/* 3 */
+
+	/* Parameter bstrMSSP */
+
+/* 1072 */	NdrFcShort( 0x8b ),	/* Flags:  must size, must free, in, by val, */
+#ifndef _ALPHA_
+/* 1074 */	NdrFcShort( 0x4 ),	/* x86, MIPS, PPC Stack size/offset = 4 */
+#else
+			NdrFcShort( 0x8 ),	/* Alpha Stack size/offset = 8 */
+#endif
+/* 1076 */	NdrFcShort( 0x1a ),	/* Type Offset=26 */
+
+	/* Parameter bstrGMCP */
+
+/* 1078 */	NdrFcShort( 0x2113 ),	/* Flags:  must size, must free, out, simple ref, srv alloc size=8 */
+#ifndef _ALPHA_
+/* 1080 */	NdrFcShort( 0x8 ),	/* x86, MIPS, PPC Stack size/offset = 8 */
+#else
+			NdrFcShort( 0x10 ),	/* Alpha Stack size/offset = 16 */
+#endif
+/* 1082 */	NdrFcShort( 0x3f2 ),	/* Type Offset=1010 */
+
+	/* Return value */
+
+/* 1084 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+#ifndef _ALPHA_
+/* 1086 */	NdrFcShort( 0xc ),	/* x86, MIPS, PPC Stack size/offset = 12 */
+#else
+			NdrFcShort( 0x18 ),	/* Alpha Stack size/offset = 24 */
+#endif
+/* 1088 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
 			0x0

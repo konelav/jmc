@@ -2,9 +2,9 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Sat Jun 11 01:50:22 2016
+/* at Tue Jan 05 04:02:39 2021
  */
-/* Compiler settings for D:\github\jmc\jmc-clone\jmc\sources\ttcoreex\ttcoreex.idl:
+/* Compiler settings for C:\mud\jmc\sources\ttcoreex\ttcoreex.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
     error checks: allocation ref bounds_check enum stub_data 
 */
