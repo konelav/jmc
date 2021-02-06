@@ -407,6 +407,7 @@ void flash_command(wchar_t *arg);
 void next_command(wchar_t* arg);
 // misc.cpp
 void daa_command(wchar_t *arg);
+void userinput_command(wchar_t *arg);
 void colon_command(wchar_t *arg);
 void do_cycle(int b1, int b2, int step, int delay, wchar_t *command);
 void wt_command(wchar_t *arg);
@@ -616,7 +617,7 @@ extern void* JMCObjRet[1000];
 // --END
 
 //* en:JMC functions struct. look cmds.h
-const int JMC_CMDS_NUM=133;
+const int JMC_CMDS_NUM=134;
 typedef struct jmc_cmd 
 	{
 	wchar_t*alias;

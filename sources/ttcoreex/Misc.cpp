@@ -872,6 +872,38 @@ void daa_command(wchar_t *arg)
     write_line_mud(arg);
 }
 
+void userinput_command(wchar_t *arg)
+{
+	wchar_t buf[BUFFER_SIZE];
+	get_arg_in_braces(arg,buf,STOP_SPACES,sizeof(buf)/sizeof(wchar_t)-1);
+    
+	if ( is_abrev(buf, L"disable") )
+		bDisplayInput = FALSE;
+    else 
+	if ( is_abrev(buf, L"prompt") )
+	{
+		bDisplayInput = TRUE;
+		bInputOnNewLine = FALSE;
+    }
+	else 
+	if ( is_abrev(buf, L"newline") )
+	{
+		bDisplayInput = TRUE;
+		bInputOnNewLine = TRUE;
+    }
+	else
+	if ( wcslen(buf)>0 )
+    {
+        tintin_puts2(rs::rs(1339));
+		return;
+	}
+	wcscpy(buf, rs::rs(1338));
+	wcscat(buf, bDisplayInput ? rs::rs(1125) : rs::rs(1126));
+	wcscat(buf, L"/");
+	wcscat(buf, bInputOnNewLine ? rs::rs(1125) : rs::rs(1126));
+	tintin_puts2(buf);
+}
+
 void colon_command(wchar_t *arg)
 {
 	wchar_t cmd[BUFFER_SIZE];

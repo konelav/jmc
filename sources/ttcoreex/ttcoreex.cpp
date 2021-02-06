@@ -1430,8 +1430,10 @@ void DLLEXPORT ReadMud()
         TIMER* ptm =  (*pos).second;
         pJmcObj->m_pvarEventParams[0] = ptm->m_nID;
         if ( ptm->m_nPreinterval != 0 && ptm->m_bPreTimerDone == FALSE && (ptm->m_nInterval - (dwTick - ptm->m_dwLastTickCount)/100) <= ptm->m_nPreinterval ) {
-            pJmcObj->Fire_PreTimer (ptm->m_nID);
             ptm->m_bPreTimerDone = TRUE;
+			pJmcObj->Fire_PreTimer (ptm->m_nID);
+            pos = TIMER_LIST.begin ();
+            continue;
         }
 
         if ( ((int)(dwTick - ptm->m_dwLastTickCount))/100 >= (int)ptm->m_nInterval ) {

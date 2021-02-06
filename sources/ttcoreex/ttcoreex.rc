@@ -696,6 +696,13 @@ BEGIN
     1337                    "#mapper critical error while search path"
 END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1338                    "#userinput: display/new line: "
+	1339					"#FORMAT: #userinput disable|prompt|newline"
+END
+
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

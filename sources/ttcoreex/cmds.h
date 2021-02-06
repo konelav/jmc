@@ -88,6 +88,7 @@ jmc_cmdi jmc_cmds[JMC_CMDS_NUM]={
 		   {L"next",&next_command,L"\0"},
 		   {L"daa",&daa_command,L"\0"},
 		   {L"whisper",&daa_command,L"daa"},
+		   {L"userinput",&userinput_command,L"\0"},
 		   {L"hide",&daa_command,L"daa"},
 		   {L"race",&race_command,L"\0"},
 		   {L"spit",&spit_command,L"\0"},
