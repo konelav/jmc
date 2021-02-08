@@ -894,14 +894,18 @@ void userinput_command(wchar_t *arg)
 	else
 	if ( wcslen(buf)>0 )
     {
-        tintin_puts2(rs::rs(1339));
+		if ( mesvar[MSG_INPUT] )
+	        tintin_puts2(rs::rs(1339));
 		return;
 	}
-	wcscpy(buf, rs::rs(1338));
-	wcscat(buf, bDisplayInput ? rs::rs(1125) : rs::rs(1126));
-	wcscat(buf, L"/");
-	wcscat(buf, bInputOnNewLine ? rs::rs(1125) : rs::rs(1126));
-	tintin_puts2(buf);
+	if ( mesvar[MSG_INPUT] )
+	{
+		wcscpy(buf, rs::rs(1338));
+		wcscat(buf, bDisplayInput ? rs::rs(1125) : rs::rs(1126));
+		wcscat(buf, L"/");
+		wcscat(buf, bInputOnNewLine ? rs::rs(1125) : rs::rs(1126));
+		tintin_puts2(buf);
+	}
 }
 
 void colon_command(wchar_t *arg)

@@ -244,8 +244,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,1,7
- PRODUCTVERSION 3,7,1,7
+ FILEVERSION 3,7,1,8
+ PRODUCTVERSION 3,7,1,8
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -263,7 +263,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "TINTIN++ Module\0"
-            VALUE "FileVersion", "3, 7, 1, 7\0"
+            VALUE "FileVersion", "3, 7, 1, 8\0"
             VALUE "InternalName", "ttcoreex\0"
             VALUE "LegalCopyright", "\0"
             VALUE "LegalTrademarks", "\0"
@@ -694,14 +694,9 @@ BEGIN
     1335                    "#mapper available actions: clear, write, add, set, autoid, track, print"
     1336                    "#mapper invalid filter field for search command: %ls"
     1337                    "#mapper critical error while search path"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     1338                    "#userinput: display/new line: "
-	1339					"#FORMAT: #userinput disable|prompt|newline"
+    1339                    "#FORMAT: #userinput disable|prompt|newline"
 END
-
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
