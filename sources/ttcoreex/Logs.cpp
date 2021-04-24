@@ -359,9 +359,12 @@ BOOL StartLog(int wnd, wchar_t* left, wchar_t *right, int dumplines = 0)
 	}
 
 	if (dumplines > 0) {
+		int lines_available = (ScrollBufferEnd - ScrollBufferBegin + ScrollBufferCapacity) % ScrollBufferCapacity;
+		if (dumplines > lines_available)
+			dumplines = lines_available;
 		int i;
-		for (i = ScrollBufferBegin; 
-		     i != ScrollBufferEnd && dumplines > 0; 
+		for (i = (ScrollBufferEnd - dumplines + ScrollBufferCapacity) % ScrollBufferCapacity;
+		     dumplines > 0;
 			 i = (i + 1) % ScrollBufferCapacity, dumplines--) {
 			log(processLine(pScrollLinesBuffer[i].line.c_str(), pScrollLinesBuffer[i].timestamp));
 			log(L"\n");
