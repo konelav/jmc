@@ -51,6 +51,7 @@ public:
 	BOOL	m_bShowHidden;
 	BOOL	m_bShowPing;
 	BOOL	m_bStickScrollbar;
+	BOOL	m_bExtAnsiColors;
 	int		m_nUserInputHide;
 	//}}AFX_DATA
 

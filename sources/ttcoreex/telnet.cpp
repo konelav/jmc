@@ -483,12 +483,14 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 		if (MudCodePageUsed == 1200) {
 			int count = min(len, processed) / sizeof(wchar_t);
 			memcpy(dst, pOutputData, count * sizeof(wchar_t));
-			len = processed = count * sizeof(wchar_t);
+			len = count;
+			processed = count * sizeof(wchar_t);
 			retConv = S_OK;
 		} else if (MudCodePageUsed == 1201) {
 			int count = min(len, processed) / sizeof(wchar_t);
 			utf16le_to_utf16be(dst, (const wchar_t*)pOutputData, count);
-			len = processed = count * sizeof(wchar_t);
+			len = count;
+			processed = count * sizeof(wchar_t);
 			retConv = S_OK;
 		} else {
 			static int last_bytes_rest = 0;

@@ -25,6 +25,11 @@
 #define USER_INPUT_MARK			L'\x01'
 #define TINTIN_OUTPUT_MARK		L'\x02'
 #define ESC_SEQUENCE_MARK		L'\x1B'
+#define ESC_SEQUENCE_TERMINATOR	L'\\'
+#define CSI_START(ch)			((ch) == L'[')
+#define CSI_PARAM(ch)			(0x30 <= (ch) && (ch) <= 0x3F) 
+#define CSI_INTERMIDIATE(ch)	(0x20 <= (ch) && (ch) <= 0x2F)
+#define CSI_END(ch)				(((ch) == 0x00) || (0x40 <= (ch) && (ch) <= 0x7E))
 
 typedef void (CALLBACK* END_FUNC)(void);
 typedef void (CALLBACK* DIRECT_OUT_FUNC)(const wchar_t*, int);

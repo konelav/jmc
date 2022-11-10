@@ -1057,14 +1057,16 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 {
     wchar_t linebuffer[BUFFER_SIZE], *cpsource, *cpdest;
 	wchar_t line_to_log[BUFFER_SIZE];
-    int LastLineLen = 0, n;
+    int LastLineLen = 0, n, destlen, src_eol, forced_eol;
 
     cpsource = buffer; 
     cpdest = linebuffer;
+	destlen = 0;
 	if (last_line[0]) {
         LastLineLen = wcslen(last_line);
         wcscpy(linebuffer,last_line);
         cpdest += LastLineLen;
+		destlen += LastLineLen;
     } 
 
     BOOL bProcess = TRUE;
@@ -1077,7 +1079,9 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
             continue;
         }
 
-        if(*cpsource == L'\n' || *cpsource == END_OF_PROMPT_MARK) {
+		src_eol = (*cpsource == L'\n' || *cpsource == END_OF_PROMPT_MARK);
+		forced_eol = (destlen >= BUFFER_SIZE - 2) ? 1 : 0;
+        if(src_eol || forced_eol) {
             *cpdest = L'\0';
 			
 			if ( !bLogAsUserSeen ) {
@@ -1105,17 +1109,20 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 
             if( wcscmp(linebuffer, L".") ) {
                 n = wcslen(linebuffer);
-				linebuffer[n++] = *cpsource;
+				linebuffer[n++] = (src_eol ? *cpsource : L'\n');
 				linebuffer[n] = L'\0';
 				DirectOutputFunction(linebuffer, 0);// out to main window
             }
 			last_line[0] = L'\0';
 
-            cpsource++;
+			if (src_eol)
+				cpsource++;
 
             cpdest = linebuffer;
+			destlen = 0;
         } else {
             *cpdest++ = *cpsource++;
+			destlen++;
 		}
     }
     *cpdest=L'\0';
@@ -1334,12 +1341,14 @@ void DLLEXPORT ReadMud()
 				if (MudCodePage == 1200) {
 					int count = min(len, processed) / sizeof(wchar_t);
 					memcpy(buf, strMudEmuText, count * sizeof(wchar_t));
-					len = processed = count * sizeof(wchar_t);
+					len = count;
+					processed = count * sizeof(wchar_t);
 					retConv = S_OK;
 				} else if (MudCodePage == 1201) {
 					int count = min(len, processed) / sizeof(wchar_t);
 					utf16le_to_utf16be(buf, (const wchar_t*)strMudEmuText, count);
-					len = processed = count * sizeof(wchar_t);
+					len = count;
+					processed = count * sizeof(wchar_t);
 					retConv = S_OK;
 				} else {
 					retConv = fConvertINetMultiByteToUnicode(&mode, MudCodePage, strMudEmuText, &processed, buf, &len);

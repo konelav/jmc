@@ -85,6 +85,7 @@ public:
 	BOOL m_bShowTimestamps;
 	BOOL m_bStickScrollbar;
 	BOOL m_bShowHiddenText;
+	BOOL m_bExtAnsiColors;
     void RecalcCharSize();
 
     // COLOR SUPPORT

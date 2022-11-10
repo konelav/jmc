@@ -22,7 +22,8 @@ public:
 
     // ANSI support members
     int      m_nCurrentBg, m_nCurrentFg;
-    BOOL     m_bAnsiBold; 
+    BOOL     m_bAnsiBold;
+	COLORREF m_AnsiFGColor, m_AnsiBGColor;
     CStringList m_strList;
 	std::vector<int> m_LineCountsList;
 	int      m_TotalLinesReceived;
@@ -45,8 +46,6 @@ protected:
     void RedrawOneLine(CDC* pDC, int LineNum);
 
 
-
-    void SetCurrentANSI(const wchar_t * strcCode);
 
 
 

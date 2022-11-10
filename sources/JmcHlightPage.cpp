@@ -347,7 +347,7 @@ void CJmcHlightPage::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 
         rect.left = rect.left + m_cHlightList.GetColumnWidth (0)-3;
 
-        str = "\x1B[0m";
+        str.Format(L"%lc[0m", ESC_SEQUENCE_MARK);
         str += pHigh->m_pGroup->m_strName.data();
         pView->DrawWithANSI (&dc, rect, &str);
         dc.SetTextColor (OldFg);

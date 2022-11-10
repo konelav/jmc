@@ -74,6 +74,12 @@ CSize CJMCStatus::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
 }
 
 extern int LengthWithoutANSI(const wchar_t* str);
+extern void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
+					  BOOL ExtAnsiColors, BOOL DarkOnly, BOOL Invert, BOOL ShowHiddenFg, BOOL ShowHiddenBg,
+					  BOOL &AnsiBold, int &CurrentFg, int &CurrentBg,
+					  COLORREF &AnsiColorFg, COLORREF &AnsiColorBg,
+					  COLORREF &ColorFg, COLORREF &ColorBg,
+					  const wchar_t **str);
 
 //vls-begin// multiple output
 static void __stdcall GetOutputName(int wnd, wchar_t *name, int maxlen)
@@ -126,50 +132,33 @@ static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* st
         return;
     ASSERT( pDoc->IsKindOf( RUNTIME_CLASS( CSmcDoc ) ) );
 
-    int Bg = 0, Fg = 7, bold = 0;
+    int nBg = 0, nFg = 7;
+	BOOL bold = FALSE;
+	COLORREF ansiBg, ansiFg, colorF, colorB;
 
 	SelectObject(lpDrawItemStruct->hDC ,pDoc->m_fntText.GetSafeHandle ());
 
 	CRect rect = lpDrawItemStruct->rcItem;
 	int shift = 0;
 
-	wchar_t* ptr = (wchar_t*)strText;
+	HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+			  FALSE, FALSE, FALSE, bold, nFg, nBg, ansiFg, ansiBg,
+			  colorF, colorB, 0);
+
+	const wchar_t* ptr = strText;
 	while (*ptr) {
-		if (*ptr == L'\x1B') {
-			ptr += 2; // skip [ symbol
-			while ( *ptr && *ptr != L'm' ) { 
-				wchar_t col[32];
-				wchar_t* dest = col;
-				while ( iswdigit(*ptr) ) 
-					*dest++ = *ptr++;
-				// now set up color 
-				*dest = 0;
-				int value = _wtoi(col);
-				if ( !value ) {
-					Bg = 0;
-					Fg = 7;
-					bold = 0;
-				}
-				if ( value == 1 ) 
-					bold = 1;
-				if ( value <= 37 && value >= 30) {
-					Fg = value-30;
-				}
-				if ( value <= 47 && value >= 40) {
-					Bg = value-40;
-				}
-				if ( *ptr == L';' ) 
-					ptr++;
-			}
-			if ( *ptr ) 
-				ptr++;
+		if (*ptr == ESC_SEQUENCE_MARK) {
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  FALSE, FALSE, FALSE, bold, nFg, nBg, ansiFg, ansiBg,
+					  colorF, colorB, &ptr);
 		}
-		wchar_t *end = ptr;
-		while (*end && *end != L'\x1B')
+		
+		const wchar_t *end = ptr;
+		while (*end && *end != ESC_SEQUENCE_MARK)
 			end++;
 
-		SetTextColor(lpDrawItemStruct->hDC , pDoc->m_ForeColors[Fg+bold*8]);
-		SetBkColor(lpDrawItemStruct->hDC , pDoc->m_BackColors[Bg]);
+		SetTextColor(lpDrawItemStruct->hDC , colorF);
+		SetBkColor(lpDrawItemStruct->hDC , colorB);
 
 		if (end > ptr) {
 			int len = end - ptr;
@@ -188,8 +177,8 @@ static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* st
 	}
 
 	if (shift == 0) {
-		SetTextColor(lpDrawItemStruct->hDC , pDoc->m_ForeColors[Fg+bold*8]);
-		SetBkColor(lpDrawItemStruct->hDC , pDoc->m_BackColors[Bg]);
+		SetTextColor(lpDrawItemStruct->hDC , colorF);
+		SetBkColor(lpDrawItemStruct->hDC , colorB);
 		ExtTextOut(lpDrawItemStruct->hDC, rect.left , rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 	}
 }
@@ -612,6 +601,7 @@ void CMainFrame::OnOptionsOptions()
 	pg1.m_bSelectRect = pDoc->m_bRectangleSelection;
 	pg1.m_bRemoveESC = pDoc->m_bRemoveESCSelection;
 	pg1.m_bShowHidden = pDoc->m_bShowHiddenText;
+	pg1.m_bExtAnsiColors = pDoc->m_bExtAnsiColors;
 
 	if (!bDisplayInput)
 		pg1.m_nUserInputHide = 0;
@@ -702,6 +692,7 @@ void CMainFrame::OnOptionsOptions()
 		pDoc->m_bRectangleSelection = pg1.m_bSelectRect;
 		pDoc->m_bRemoveESCSelection = pg1.m_bRemoveESC;
 		pDoc->m_bShowHiddenText = pg1.m_bShowHidden;
+		pDoc->m_bExtAnsiColors = pg1.m_bExtAnsiColors;
 
         MoreComingDelay = pg1.m_nTrigDelay;
 
@@ -1009,6 +1000,8 @@ BOOL CInvertSplit::SplitRow()
 	pMainView->m_TotalLinesReceived = pView->m_TotalLinesReceived;
     pMainView->m_nCurrentBg  = pView->m_nCurrentBg;
     pMainView->m_nCurrentFg  = pView->m_nCurrentFg;
+	pMainView->m_AnsiBGColor  = pView->m_AnsiBGColor;
+    pMainView->m_AnsiFGColor  = pView->m_AnsiFGColor;
     pMainView->m_bAnsiBold = pView->m_bAnsiBold;
     pMainView->InvalidateRect(NULL, FALSE);
     pMainView->UpdateWindow();

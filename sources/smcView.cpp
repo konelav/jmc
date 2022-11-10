@@ -86,16 +86,190 @@ BOOL CSmcView::PreCreateWindow(CREATESTRUCT& cs)
 int LengthWithoutANSI(const wchar_t* str) 
 {
 	int ret = 0;
-	const wchar_t *maxp = str + 1000;
+	const wchar_t *maxp = str + BUFFER_SIZE - 2;
 	for(; *str && str < maxp; str++) {
-		if(*str == L'\x1B') {
-			for(; *str && *str != L'm' && str < maxp; str++);
+		if(*str == ESC_SEQUENCE_MARK && CSI_START(str[1])) {
+			str += 2;
+			for(; !CSI_END(*str) && str < maxp; str++);
 		} else {
 			ret++;
 		}
 	}
 
 	return ret;
+}
+void ParseCSI(wchar_t &command, std::vector<int> &args, const wchar_t **str)
+{
+	const wchar_t *strCode = *str;
+	while (CSI_PARAM(*strCode))
+	{
+		int arg = _wtoi(strCode);
+		args.push_back(arg);
+		while (CSI_PARAM(*strCode) && (*strCode != L';'))
+			strCode++;
+		if (*strCode == L';')
+			strCode++;
+	}
+	while (CSI_INTERMIDIATE(*strCode))
+		strCode++;
+	command = *strCode;
+	if (*strCode)
+		strCode++;;
+	*str = strCode;
+}
+void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
+			   BOOL ExtAnsiColors, BOOL DarkOnly, BOOL Invert, BOOL ShowHiddenFg, BOOL ShowHiddenBg,
+			   BOOL &AnsiBold, int &CurrentFg, int &CurrentBg,
+			   COLORREF &AnsiColorFg, COLORREF &AnsiColorBg,
+			   COLORREF &ColorFg, COLORREF &ColorBg,
+			   const wchar_t **str)
+{
+	const wchar_t *strCode;
+	if (!str)
+		strCode = L"";
+	else
+		strCode = *str;
+    
+	if ( strCode[0] == ESC_SEQUENCE_MARK )
+		strCode++;
+
+	if ( !CSI_START(*strCode) )
+	{
+		for ( ; *strCode && !(strCode[0] == ESC_SEQUENCE_MARK && strCode[1] == ESC_SEQUENCE_TERMINATOR); strCode++ )
+			;
+		if (strCode[0] == ESC_SEQUENCE_MARK)
+			strCode += 2;
+	}
+	else
+	{
+		strCode++; // skip '['
+
+		std::vector<int> args;
+		wchar_t cmd;
+		ParseCSI(cmd, args, &strCode);
+		
+		if (cmd == L'm') //SGR - Select Graphics Rendition, the only command to be implemented
+		{
+			if (ExtAnsiColors && args.size() == 3 && (args[0] == 38 || args[0] == 48) && args[1] == 5) // 256-bit color
+			{
+				int color = args[2];
+				if (0 <= color && color <= 7)
+				{
+					if (args[0] == 38)
+					{
+						AnsiBold = FALSE;
+						CurrentFg = color - 0;
+					}
+					else
+						CurrentBg = color - 0;
+				}
+				else if (8 <= color && color <= 15)
+				{
+					if (args[0] == 38)
+					{
+						AnsiBold = TRUE;
+						CurrentFg = color - 8;
+					}
+					else
+						CurrentBg = color - 8;
+				}
+				else if (16 <= color && color <= 231)
+				{
+					int r, g, b;
+					color -= 16;
+					b = (color % 6) * 50; color /= 6;
+					g = (color % 6) * 50; color /= 6;
+					r = color * 50;
+					if (args[0] == 38)
+					{
+						AnsiColorFg = RGB(r, g, b);
+						CurrentFg = -1;
+					}
+					else
+					{
+						AnsiColorBg = RGB(r, g, b);
+						CurrentBg = -1;
+					}
+				}
+				else if (232 <= color && color <= 255)
+				{
+					int gray = (color - 232) * 11;
+					if (args[0] == 38)
+					{
+						AnsiColorFg = RGB(gray, gray, gray);
+						CurrentFg = -1;
+					}
+					else
+					{
+						AnsiColorBg = RGB(gray, gray, gray);
+						CurrentBg = -1;
+					}
+				}
+			}
+			else if (ExtAnsiColors && args.size() == 5 && (args[0] == 38 || args[0] == 48) && args[1] == 2) // true color
+			{
+				int r = args[2], g = args[3], b = args[4];
+				if (args[0] == 38)
+				{
+					AnsiColorFg = RGB(r, g, b);
+					CurrentFg = -1;
+				}
+				else
+				{
+					AnsiColorBg = RGB(r, g, b);
+					CurrentBg = -1;
+				}
+			}
+			else // old-style arg-by-arg interpretation (not strictly according to standard)
+			{
+				for (int i = 0; i < args.size(); i++)
+				{
+					int value = args[i];
+					if ( !value ) {
+						CurrentBg = 0;
+						CurrentFg = 7;
+						AnsiBold = FALSE;
+					}
+					else if ( value == 1 ) {
+						AnsiBold = TRUE;
+					}
+					else if ( 30 <= value && value <= 37) {
+						CurrentFg = value - 30;
+					}
+					else if ( 40 <= value && value <= 47) {
+						CurrentBg = value - 40;
+					}
+					else if ( 90 <= value && value <= 97) {
+						AnsiBold = TRUE;
+						CurrentFg = value - 90;
+					}
+					else if ( 100 <= value && value <= 107) {
+						//AnsiBold = TRUE; // - do not use bold colors for background
+						CurrentBg = value - 100;
+					}
+				}
+			}
+		}
+	}
+
+	ColorFg = (CurrentFg < 0 ? AnsiColorFg :
+		FgColors[CurrentFg + (AnsiBold && !DarkOnly ? 8 : 0 )]);
+	ColorBg = (CurrentBg < 0 ? AnsiColorBg :
+		BgColors[CurrentBg]);
+    if (Invert)
+	{
+		ColorFg = 0xFFFFFF - ColorFg;
+		ColorBg = 0xFFFFFF - ColorBg;
+    }
+	else if (ColorFg == ColorBg && ShowHiddenFg) {
+		ColorFg = 0xFFFFFF - ColorFg;
+    }
+	else if (ColorFg == ColorBg && ShowHiddenBg) {
+        ColorBg = 0xFFFFFF - ColorBg;
+    }
+
+	if (str)
+		*str = strCode;
 }
 static int NumOfLines(int StrLength, int LineWidth) 
 {
@@ -459,34 +633,6 @@ BOOL CSmcView::PreTranslateMessage(MSG* pMsg)
 	return FALSE;
 }
 
-void CSmcView::SetCurrentANSI(const wchar_t* strCode)
-{
-    ASSERT(strCode);
-    if ( strCode[0] == 0 ) 
-        return;
-
-    int value = _wtoi(strCode);
-    if ( !value ) {
-        m_nCurrentBg = 0;
-        m_nCurrentFg = 7;
-        m_bAnsiBold = FALSE;
-        return;
-    }
-
-    if ( value == 1 ) {
-        m_bAnsiBold = TRUE;
-    }
-
-    if ( value <= 37 && value >= 30) {
-        m_nCurrentFg = value-30;
-        return;
-    }
-    if ( value <= 47 && value >= 40) {
-        m_nCurrentBg = value-40;
-        return;
-    }
-}
-
 void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 {
     CSmcDoc* pDoc = (CSmcDoc*)GetDocument();
@@ -495,7 +641,7 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
     m_nCurrentFg = 7;
     m_bAnsiBold = FALSE;
     CRect OutRect;
-    int indexF, indexB;
+    COLORREF colorF, colorB;
 
     const wchar_t* src = *str;
 
@@ -512,7 +658,7 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             wchar_t Text[BUFFER_SIZE];
             wchar_t* dest = Text;
             int TextLen = 0;
-            while (*src && *src != L'\x1B' ) {
+            while (*src && *src != ESC_SEQUENCE_MARK ) {
                 // check for current bold
                 if ( (pDoc->m_bRectangleSelection || nStrPos == m_nStartSelectY) && CharCount == m_nStartSelectX) {
                     bNewInvert = TRUE;
@@ -535,16 +681,11 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             while ( TextLen && (Text[TextLen-1] == L'\n' ) )
                 TextLen--;
 
-            indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-            indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-
-			if ( bOldInvert ) {
-				pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-				pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-			} else {
-				pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-				pDC->SetBkColor(pDoc->m_BackColors[indexB]);
-			}
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, 0);
+			pDC->SetTextColor(colorF);
+			pDC->SetBkColor(colorB);
 
             CRect myRect(0,0,0,0) ;
             int XShift;
@@ -560,8 +701,8 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 				//LeftSide += XShift;
                 //pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, Text, TextLen, NULL);
 				int index = 0;
-				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() ) {
-					int len = (rect.Width() - LeftSide) / pDoc->m_nCharX;
+				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() && TextLen > 0) {
+					int len = min((rect.Width() - LeftSide) / pDoc->m_nCharX, TextLen);
 
 					if (len < 1) //nothing can be drawn
 						break;
@@ -600,37 +741,19 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
                 break;
 
             // check for [ command and digit after it. IF not - skip to end of ESC command
-            if ( *src != L'[' /*|| !isdigit(*src)*/ ) {
-                while ( *src && *src != L'm' ) src++;
-                if ( *src == L'm' )
-                    src++;
-                continue;
-            }
-            // now Get colors command and use it
-            do {        
-                // may be need skip to ; . But .... Speed
-                Text[0] = 0;
-                dest = Text;
-                while ( iswdigit(*src) ) 
-                    *dest++ = *src++;
-                *dest = 0;
-                if ( Text[0] ) 
-                    SetCurrentANSI(Text);
-            } while ( *src && *src++ != L'm' );
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, &src);
         }while ( *src );
         // draw to end of the window
         OutRect = rect;
 		OutRect.top += TopSide;
         OutRect.left += LeftSide;
-        indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-        indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-        if (!pDoc->m_bRectangleSelection && bOldInvert ) {
-            pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-			pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-        } else {
-            pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-			pDC->SetBkColor(pDoc->m_BackColors[indexB]);
-        }
+		HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+			      !pDoc->m_bRectangleSelection && bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+				  colorF, colorB, 0);
+		pDC->SetTextColor(colorF);
+		pDC->SetBkColor(colorB);
         pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, L"", 0, NULL);
     } else {
         do  {
@@ -638,7 +761,7 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             wchar_t Text[BUFFER_SIZE];
             wchar_t* dest = Text;
             int TextLen = 0;
-            while (*src && *src != L'\x1B' ) {
+            while (*src && *src != ESC_SEQUENCE_MARK ) {
                 *dest++ = *src++;
                 TextLen++;
             }
@@ -649,15 +772,11 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             while ( TextLen && (Text[TextLen-1] == L'\n' ) )
                 TextLen--;
 
-            indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-            indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-        
-			if (pDoc->m_bShowHiddenText && indexB == indexF)
-				pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-			else
-				pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-			//pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-			pDC->SetBkColor(pDoc->m_BackColors[indexB]);
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  FALSE, pDoc->m_bShowHiddenText, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, 0);
+            pDC->SetTextColor(colorF);
+			pDC->SetBkColor(colorB);
 
             CRect myRect(0,0,0,0);
             int XShift;
@@ -670,8 +789,8 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 
             if ( XShift ) {
 				int index = 0;
-				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() ) {
-					int len = (rect.Width() - LeftSide) / pDoc->m_nCharX;
+				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() && TextLen > 0) {
+					int len = min((rect.Width() - LeftSide) / pDoc->m_nCharX, TextLen);
 
 					OutRect = rect;
 					OutRect.left += LeftSide;
@@ -700,37 +819,18 @@ void CSmcView::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
                 break;
 
             // check for [ command and digit after it. IF not - skip to end of ESC command
-            if ( *src != L'[' /*|| !isdigit(*src)*/ ) {
-                while ( *src && *src != L'm' ) src++;
-                if ( *src == L'm' )
-                    src++;
-                continue;
-            }
-            // now Get colors command and use it
-            do {        
-                // may be need skip to ; . But .... Speed
-                Text[0] = 0;
-                dest = Text;
-                while ( iswdigit(*src) ) 
-                    *dest++ = *src++;
-                *dest = 0;
-                if ( Text[0] ) 
-                    SetCurrentANSI(Text);
-            } while ( *src && *src++ != L'm' );
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  FALSE, pDoc->m_bShowHiddenText, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, &src);
         }while ( *src );
         OutRect = rect;
         OutRect.left += LeftSide;
 		OutRect.top += TopSide;
-        indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-        indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-
-
-		if (pDoc->m_bShowHiddenText && indexB == indexF)
-			pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-		else
-			pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-		//pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-		pDC->SetBkColor(pDoc->m_BackColors[indexB]);
+		HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+				  FALSE, pDoc->m_bShowHiddenText, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+				  colorF, colorB, 0);
+        pDC->SetTextColor(colorF);
+		pDC->SetBkColor(colorB);
 
         pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, L"", 0, NULL);
     }
@@ -757,8 +857,22 @@ void CSmcView::OnLButtonDown(UINT nFlags, CPoint point)
 
 static const wchar_t* SkipAnsi(const wchar_t* ptr)
 {
+	if (*ptr == ESC_SEQUENCE_MARK)
+		ptr++;
 
-    for ( ; *ptr && *ptr != L'm'; ptr++ ) {};
+	if (CSI_START(*ptr))
+	{
+		ptr++;
+		for ( ; !CSI_END(*ptr); ptr++ )
+			;
+	}
+	else
+	{
+		for ( ; *ptr && !(ptr[0] == ESC_SEQUENCE_MARK && ptr[1] == ESC_SEQUENCE_TERMINATOR); ptr++ )
+			;
+		if (ptr[0] == ESC_SEQUENCE_MARK)
+			ptr++;
+	}
 
 	if (*ptr)
 		ptr++;
@@ -791,7 +905,7 @@ void CSmcView::OnLButtonUp(UINT nFlags, CPoint point)
             if (pDoc->m_bRectangleSelection || i == m_nStartSelectY) {
                 // Skip to StartX character
                 while ( count < m_nStartSelectX && *ptr){
-                    if ( *ptr == L'\x1B' ){
+                    if ( *ptr == ESC_SEQUENCE_MARK ){
                         ptr = SkipAnsi(ptr);
                     }
                     else {
@@ -811,7 +925,7 @@ void CSmcView::OnLButtonUp(UINT nFlags, CPoint point)
                 }
 				if ( count > m_nEndSelectX && (pDoc->m_bRectangleSelection || i == m_nEndSelectY)) 
                     break;
-                if ( *ptr == L'\x1B' ) {
+                if ( *ptr == ESC_SEQUENCE_MARK ) {
                     const wchar_t *endansi = SkipAnsi(ptr);
 					if (!pDoc->m_bRemoveESCSelection)
 						for (const wchar_t *p = ptr; p < endansi; p++)
@@ -928,8 +1042,8 @@ void CSmcView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			SYSTEMTIME st;
 			if (pDoc->m_bShowTimestamps) {
 				GetLocalTime(&st);
-				timestr.Format(L"\x1b[1;30m[%02d:%02d:%02d] ",
-					st.wHour, st.wMinute, st.wSecond);
+				timestr.Format(L"%lc[1;30m[%02d:%02d:%02d] ",
+					ESC_SEQUENCE_MARK, st.wHour, st.wMinute, st.wSecond);
 			}
 
 			CString str = pDoc->m_strTempList.GetHead();

@@ -408,7 +408,7 @@ BEGIN
     CONTROL         "Авто-очистка",IDC_CLEAR_INPUT,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,226,134,88,10
     CONTROL         "Разбивать при прокрутке",IDC_SPLIT_ONBACKSCROLL,"Button",
-                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,122,88,86,18
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,122,86,86,18
     CONTROL         "Автоподключение",IDC_AUTO_RECONNECT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,219,7,77,10
     CONTROL         "Бип при подключении",IDC_CONNECT_BEEP,"Button",
@@ -428,11 +428,11 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,219,28,83,10
     GROUPBOX        "Команды",IDC_COMMANDS_FRAME,7,78,105,58
     CONTROL         "Перенос строк",IDC_CHK_LINEWRAP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,109,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,104,88,10
     CONTROL         "Прямоугольная область",IDC_CHK_SELECTRECT,"Button",
                     BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,226,87,81,18
     CONTROL         "Подсветка невидимого текста",IDC_CHK_SHOWHIDDEN,"Button",
-                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,122,122,88,
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,122,115,88,
                     18
     GROUPBOX        "Обработка ввода",-1,220,123,98,62
     GROUPBOX        "Отображение",-1,117,78,98,107
@@ -448,14 +448,16 @@ BEGIN
     CONTROL         "На новой строке",IDC_INPUT_ON_NEW_LINE,"Button",
                     BS_AUTORADIOBUTTON,13,176,91,8
     CONTROL         "Показывать пинг",IDC_DISPLAY_PING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,143,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,135,90,10
     CONTROL         "Метки времени",IDC_DISPLAY_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,158,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,147,90,10
     LTEXT           "Кодировка соединения",-1,7,64,88,8
     COMBOBOX        IDC_MUD_CODEPAGE,118,62,132,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Залипание прокрутки",IDC_DISPLAY_STICK_SCROLLBAR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,172,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,159,90,10
+    CONTROL         "Расширенные цвета",IDC_DISPLAY_EXT_ANSI_COLORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,171,90,10
 END
 
 IDD_PROFILE_LIST DIALOG DISCARDABLE  0, 0, 186, 117
@@ -1242,11 +1244,11 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,219,28,87,10
     GROUPBOX        "Commands",IDC_COMMANDS_FRAME,7,78,105,52
     CONTROL         "Wrap lines",IDC_CHK_LINEWRAP,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,122,101,75,10
+                    WS_TABSTOP,122,99,75,10
     CONTROL         "Rectangular area",IDC_CHK_SELECTRECT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,210,88,101,10
     CONTROL         "Show hidden text",IDC_CHK_SHOWHIDDEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,115,74,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,110,74,10
     GROUPBOX        "Input handling",IDC_STATIC,207,113,108,57
     GROUPBOX        "Display settings",IDC_STATIC,117,78,85,92
     GROUPBOX        "Selection",IDC_STATIC,207,78,109,33
@@ -1260,14 +1262,16 @@ BEGIN
     CONTROL         "On new line",IDC_INPUT_ON_NEW_LINE,"Button",
                     BS_AUTORADIOBUTTON,13,161,94,8
     CONTROL         "Show ping",IDC_DISPLAY_PING,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,122,129,77,10
+                    WS_TABSTOP,122,121,77,10
     CONTROL         "Line timestamps",IDC_DISPLAY_TIMESTAMPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,143,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,132,77,10
     LTEXT           "Code page",IDC_STATIC,7,64,88,8
     COMBOBOX        IDC_MUD_CODEPAGE,118,62,132,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Stick scrollbar",IDC_DISPLAY_STICK_SCROLLBAR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,122,156,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,143,77,10
+    CONTROL         "Extended colors",IDC_DISPLAY_EXT_ANSI_COLORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,122,154,77,10
 END
 
 IDD_SUBST_PAGE DIALOG DISCARDABLE  0, 0, 269, 98
@@ -1866,7 +1870,7 @@ BEGIN
     IDD_PARAMS_PAGE, DIALOG
     BEGIN
         RIGHTMARGIN, 323
-        BOTTOMMARGIN, 178
+        BOTTOMMARGIN, 177
     END
 
     IDD_LOG_PARAMS_PAGE, DIALOG

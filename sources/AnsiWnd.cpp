@@ -60,6 +60,12 @@ BOOL CAnsiWnd::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 extern int LengthWithoutANSI(const wchar_t* str);
+extern void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
+					  BOOL ExtAnsiColors, BOOL DarkOnly, BOOL Invert, BOOL ShowHiddenFg, BOOL ShowHiddenBg,
+					  BOOL &AnsiBold, int &CurrentFg, int &CurrentBg,
+					  COLORREF &AnsiColorFg, COLORREF &AnsiColorBg,
+					  COLORREF &ColorFg, COLORREF &ColorBg,
+					  const wchar_t **str);
 static int NumOfLines(int StrLength, int LineWidth) 
 {
 	if (LineWidth <= 0)
@@ -306,34 +312,6 @@ BOOL CAnsiWnd::OnEraseBkgnd(CDC* pDC)
 	// return CWnd::OnEraseBkgnd(pDC);
 }
 
-void CAnsiWnd::SetCurrentANSI(const wchar_t *strCode)
-{
-    ASSERT(strCode);
-    if ( strCode[0] == 0 ) 
-        return;
-
-    int value = _wtoi(strCode);
-    if ( !value ) {
-        m_nCurrentBg = 0;
-        m_nCurrentFg = 7;
-        m_bAnsiBold = FALSE;
-        return;
-    }
-
-    if ( value == 1 ) {
-        m_bAnsiBold = TRUE;
-    }
-
-    if ( value <= 37 && value >= 30) {
-        m_nCurrentFg = value-30;
-        return;
-    }
-    if ( value <= 47 && value >= 40) {
-        m_nCurrentBg = value-40;
-        return;
-    }
-}
-
 void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 {
     // Set def colors
@@ -341,7 +319,7 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
     m_nCurrentFg = 7;
     m_bAnsiBold = FALSE;
     CRect OutRect;
-    int indexF, indexB;
+    COLORREF colorF, colorB;
 
     const wchar_t* src = *str;
 
@@ -359,7 +337,7 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             wchar_t Text[BUFFER_SIZE];
             wchar_t* dest = Text;
             int TextLen = 0;
-            while (*src && *src != L'\x1B' ) {
+            while (*src && *src != ESC_SEQUENCE_MARK ) {
                 // check for current bold
                 if ( (pDoc->m_bRectangleSelection || nStrPos == m_nStartSelectY) && CharCount == m_nStartSelectX) {
                     bNewInvert = TRUE;
@@ -382,16 +360,11 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             while ( TextLen && (Text[TextLen-1] == L'\n' ) )
                 TextLen--;
 
-            indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-            indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-
-            if ( bOldInvert ) {
-                pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-                pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-            } else {
-                pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-                pDC->SetBkColor(pDoc->m_BackColors[indexB]);
-            }
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, 0);
+            pDC->SetTextColor(colorF);
+			pDC->SetBkColor(colorB);
 
             CRect myRect(0,0,0,0) ;
             int XShift;
@@ -407,8 +380,8 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 				//LeftSide += XShift;
                 //pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, Text, TextLen, NULL);
 				int index = 0;
-				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() ) {
-					int len = (rect.Width() - LeftSide) / pDoc->m_nCharX;
+				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() && TextLen > 0) {
+					int len = min((rect.Width() - LeftSide) / pDoc->m_nCharX, TextLen);
 
 					if (len < 1) //nothing can be drawn
 						break;
@@ -447,37 +420,19 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
                 break;
 
             // check for [ command and digit after it. IF not - skip to end of ESC command
-            if ( *src != L'[' /*|| !isdigit(*src)*/ ) {
-                while ( *src && *src != L'm' ) src++;
-                if ( *src == L'm' )
-                    src++;
-                continue;
-            }
-            // now Get colors command and use it
-            do {        
-                // may be need skip to ; . But .... Speed
-                Text[0] = 0;
-                dest = Text;
-                while ( iswdigit(*src) ) 
-                    *dest++ = *src++;
-                *dest = 0;
-                if ( Text[0] ) 
-                    SetCurrentANSI(Text);
-            } while ( *src && *src++ != L'm' );
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, &src);
         }while ( *src );
         // draw to end of the window
         OutRect = rect;
 		OutRect.top += TopSide;
         OutRect.left += LeftSide;
-        indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-        indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-        if (!pDoc->m_bRectangleSelection && bOldInvert ) {
-            pDC->SetTextColor(0xFFFFFF-pDoc->m_ForeColors[indexF]);
-            pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-        } else {
-            pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-            pDC->SetBkColor(pDoc->m_BackColors[indexB]);
-        }
+		HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+				  !pDoc->m_bRectangleSelection && bOldInvert, FALSE, FALSE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+				  colorF, colorB, &src);
+        pDC->SetTextColor(colorF);
+		pDC->SetBkColor(colorB);
         pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, L"", 0, NULL);
     } else {
         do  {
@@ -485,7 +440,7 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             wchar_t Text[BUFFER_SIZE];
             wchar_t* dest = Text;
             int TextLen = 0;
-            while (*src && *src != L'\x1B' ) {
+            while (*src && *src != ESC_SEQUENCE_MARK ) {
                 *dest++ = *src++;
                 TextLen++;
             }
@@ -496,14 +451,11 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
             while ( TextLen && (Text[TextLen-1] == L'\n' ) )
                 TextLen--;
 
-            indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-            indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-        
-            pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-			if (indexB == indexF)
-				pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-			else
-				pDC->SetBkColor(pDoc->m_BackColors[indexB]);
+			HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  FALSE, FALSE, TRUE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, 0);
+            pDC->SetTextColor(colorF);
+			pDC->SetBkColor(colorB);
 
             CRect myRect(0,0,0,0);
             int XShift;
@@ -516,8 +468,8 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
 
             if ( XShift ) {
 				int index = 0;
-				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() ) {
-					int len = (rect.Width() - LeftSide) / pDoc->m_nCharX;
+				while ( pDoc->m_bLineWrap && LeftSide + XShift > rect.Width() && TextLen > 0) {
+					int len = min((rect.Width() - LeftSide) / pDoc->m_nCharX, TextLen);
 
 					OutRect = rect;
 					OutRect.left += LeftSide;
@@ -546,34 +498,18 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
                 break;
 
             // check for [ command and digit after it. IF not - skip to end of ESC command
-            if ( *src != L'[' /*|| !isdigit(*src)*/ ) {
-                while ( *src && *src != L'm' ) src++;
-                if ( *src == L'm' )
-                    src++;
-                continue;
-            }
-            // now Get colors command and use it
-            do {        
-                // may be need skip to ; . But .... Speed
-                Text[0] = 0;
-                dest = Text;
-                while ( iswdigit(*src) ) 
-                    *dest++ = *src++;
-                *dest = 0;
-                if ( Text[0] ) 
-                    SetCurrentANSI(Text);
-            } while ( *src && *src++ != 'm' );
+            HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+					  FALSE, FALSE, TRUE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+					  colorF, colorB, &src);
         }while ( *src );
         OutRect = rect;
         OutRect.left += LeftSide;
 		OutRect.top += TopSide;
-        indexF = m_nCurrentFg + (m_bAnsiBold && !pDoc->m_bDarkOnly ? 8 : 0 );
-        indexB = m_nCurrentBg; //+ (m_bAnsiBold ? 8 : 0 );
-        pDC->SetTextColor(pDoc->m_ForeColors[indexF]);
-		if (indexB == indexF)
-			pDC->SetBkColor(0xFFFFFF-pDoc->m_BackColors[indexB]);
-		else
-			pDC->SetBkColor(pDoc->m_BackColors[indexB]);
+		HandleCSI(pDoc->m_ForeColors, pDoc->m_BackColors, pDoc->m_bExtAnsiColors, pDoc->m_bDarkOnly,
+				  FALSE, FALSE, TRUE, m_bAnsiBold, m_nCurrentFg, m_nCurrentBg, m_AnsiFGColor, m_AnsiBGColor,
+				  colorF, colorB, 0);
+        pDC->SetTextColor(colorF);
+		pDC->SetBkColor(colorB);
         pDC->ExtTextOut(OutRect.left, OutRect.top, ETO_OPAQUE, &OutRect, L"", 0, NULL);
     }
 }
@@ -598,14 +534,25 @@ void CAnsiWnd::OnLButtonDown(UINT nFlags, CPoint point)
 
 static const wchar_t* SkipAnsi(const wchar_t* ptr)
 {
+	if (*ptr == ESC_SEQUENCE_MARK)
+		ptr++;
 
-    for ( ; *ptr ; ptr++ ) {
-        if ( *ptr == L'm' ){
-            ptr++;
-            break;
-        }
-    }
+	if (CSI_START(*ptr))
+	{
+		ptr++;
+		for ( ; !CSI_END(*ptr); ptr++ )
+			;
+	}
+	else
+	{
+		for ( ; *ptr && !(ptr[0] == ESC_SEQUENCE_MARK && ptr[1] == ESC_SEQUENCE_TERMINATOR); ptr++ )
+			;
+		if (ptr[0] == ESC_SEQUENCE_MARK)
+			ptr++;
+	}
 
+	if (*ptr)
+		ptr++;
     return ptr;
 }
 
@@ -634,7 +581,7 @@ void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point)
             if (pDoc->m_bRectangleSelection || i == m_nStartSelectY) {
                 // Skip to StartX character
                 while ( count < m_nStartSelectX && *ptr){
-                    if ( *ptr == L'\x1B' ){
+                    if ( *ptr == ESC_SEQUENCE_MARK ){
                         ptr = SkipAnsi(ptr);
                     }
                     else {
@@ -650,7 +597,7 @@ void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point)
                     ptr++;
                     continue;
                 }
-                if ( *ptr == L'\x1B' ) {
+                if ( *ptr == ESC_SEQUENCE_MARK ) {
                     ptr = SkipAnsi(ptr);
                     continue;
                 } //* en: do not even try

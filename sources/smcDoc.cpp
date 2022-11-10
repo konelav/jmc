@@ -67,44 +67,99 @@ CCriticalSection ReloadScriptsSection;
 BOOL bReloadScripts = FALSE; // indicates script engine should be reloaded
 CString strScriptText;
 
-static int LastParsedBg = 40, LastParsedFg = 37, LastParsedBold = 0;
+static std::vector<int> LastParsedBg, LastParsedFg;
+static int LastParsedBold = 0;
 
 //vls-begin// script files
 BOOL bScriptFileListChanged = FALSE;
 //vls-end//
 
+extern void ParseCSI(wchar_t &command, std::vector<int> &args, const wchar_t **str);
 static void ParseAnsiValues (const wchar_t* AnsiStr, CString* pLastESC)
 {
     const wchar_t* src = AnsiStr;
-    wchar_t Num[128] ;
+
+	if (LastParsedBg.size() == 0)
+		LastParsedBg.push_back(40);
+	if (LastParsedFg.size() == 0)
+	{
+		LastParsedFg.push_back(LastParsedBold);
+		LastParsedFg.push_back(37);
+	}
 
     do {
-        wchar_t* dest = Num;
-        while (iswdigit(*src) ) {
-            *dest++ = *src++;
-        }
-        *dest = 0;
-        if ( Num[0] ) {
-            int Value = _wtoi(Num);
-            if ( Value <38 && Value >=30 ) 
-                LastParsedFg = Value;
-            else 
-                if ( Value < 48 && Value >= 40 )
-                    LastParsedBg = Value;
-                else 
-                    if ( Value == 0 ) {
-                        LastParsedFg = 37;
-                        LastParsedBg = 40;
-                        LastParsedBold = 0;
-                    }
-                    else  
-                        if ( Value == 1 )
-                            LastParsedBold = 1;
+		wchar_t cmd;
+		std::vector<int> args;
+		ParseCSI(cmd, args, &src);
+		if (cmd == L'm')
+		{
+			if      (args.size() == 3 && args[0] == 38 && args[1] == 5) // 256-bit color foreground
+				LastParsedFg = args;
+			else if (args.size() == 3 && args[0] == 48 && args[1] == 5) // 256-bit color background
+				LastParsedBg = args;
+			else if (args.size() == 5 && args[0] == 38 && args[1] == 2) // truecolor foreground
+				LastParsedFg = args;
+			else if (args.size() == 5 && args[0] == 48 && args[1] == 2) // truecolor background
+				LastParsedBg = args;
+			else
+			{
+				for (int i = 0; i < args.size(); i++)
+				{
+					int value = args[i];
+					if (value == 0) {
+						LastParsedBold = 0;
+						while (LastParsedFg.size() > 2)
+							LastParsedFg.pop_back();
+						LastParsedFg[0] = LastParsedBold;
+						LastParsedFg[1] = 37;
+						LastParsedBg[0] = 40;
+					}
+					else if (value == 1) {
+						LastParsedBold = 1;
+						if (LastParsedFg.size() == 2)
+							LastParsedFg[0] = LastParsedBold;
+					}
+					else if ( 30 <= value && value <= 37) {
+						while (LastParsedFg.size() > 2)
+							LastParsedFg.pop_back();
+						LastParsedFg[0] = LastParsedBold;
+						LastParsedFg[1] = value;
+					}
+					else if ( 40 <= value && value <= 47) {
+						LastParsedBg[0] = value;
+					}
+					else if ( 90 <= value && value <= 97) {
+						LastParsedBold = 1;
+						while (LastParsedFg.size() > 2)
+							LastParsedFg.pop_back();
+						LastParsedFg[0] = LastParsedBold;
+						LastParsedFg[1] = value - 90 + 30;
+					}
+					else if ( 100 <= value && value <= 107) {
+						//AnsiBold = TRUE; // - do not use bold colors for background
+						LastParsedBg[0] = value - 100 + 40;
+					}
+				}
+			}
+		}
+    } while (*src ) ;
 
-        }
-    } while (*src++ ) ;
-
-    pLastESC->Format(L"%c[%d;%d;%dm" , L'\x1B', LastParsedBold, LastParsedFg, LastParsedBg );
+	CString tmp;
+	int i;
+	tmp.Format(L"%lc[", ESC_SEQUENCE_MARK);
+	*pLastESC = tmp;
+	for (i = 0; i < LastParsedFg.size(); i++)
+	{
+		tmp.Format(L"%d%lc", LastParsedFg[i], (i == LastParsedFg.size() - 1) ? L'm' : L';');
+		*pLastESC += tmp;
+	}
+    tmp.Format(L"%lc[", ESC_SEQUENCE_MARK);
+	*pLastESC += tmp;
+	for (i = 0; i < LastParsedBg.size(); i++)
+	{
+		tmp.Format(L"%d%lc", LastParsedBg[i], (i == LastParsedBg.size() - 1) ? L'm' : L';');
+		*pLastESC += tmp;
+	}
 }
 
 static void AddToOutList(const wchar_t* str, int wndCode)
@@ -209,15 +264,26 @@ static void AddToOutList(const wchar_t* str, int wndCode)
 
     do {
         switch ( *src ) {
-        case L'\x1B':
-            // Now skip ansi and save it to AllANSIFromCurrString
-            do {
+        case ESC_SEQUENCE_MARK:
+			if (CSI_START(src[1]))
+			{
+				//*ansi++ = *src;
+				*dest++ = *src;
+				src++;
 				*ansi++ = *src;
-                *dest++ = *src++;
-            } while ( *src && *src != L'm' ) ;
-			*ansi++ = *src;
-			*ansi = 0;
-            *dest++ = *src;
+				*dest++ = *src;
+				do {
+					src++;
+					*ansi++ = *src;
+					*dest++ = *src;
+				} while (CSI_PARAM(*src) || CSI_INTERMIDIATE(*src));
+				*ansi = 0;
+			}
+			else
+			{
+				while (*src && !(src[0] == ESC_SEQUENCE_MARK && src[1] == ESC_SEQUENCE_TERMINATOR))
+					src++;
+			}
             // Ansi skipped
             if ( *src ) 
                 break;
@@ -429,8 +495,7 @@ CSmcDoc::CSmcDoc() : m_ParseDlg(AfxGetMainWnd() ), m_MudEmulator(AfxGetMainWnd()
     }
 //vls-end//
 
-    pStrLastESC = L"\x1B";
-    pStrLastESC += L"[0m";
+    pStrLastESC.Format(L"%lc[0m", ESC_SEQUENCE_MARK);
 
     m_bFrozen = FALSE;
 
@@ -466,6 +531,7 @@ CSmcDoc::CSmcDoc() : m_ParseDlg(AfxGetMainWnd() ), m_MudEmulator(AfxGetMainWnd()
 	m_bShowTimestamps = ::GetPrivateProfileInt(L"Options" , L"LineTimeStamps" , 0, szGLOBAL_PROFILE);
 	m_bStickScrollbar = ::GetPrivateProfileInt(L"Options" , L"StickScrollbar" , 0, szGLOBAL_PROFILE);
 	m_bShowHiddenText = ::GetPrivateProfileInt(L"Options" , L"ShowHiddenText" , 1, szGLOBAL_PROFILE);
+	m_bExtAnsiColors = ::GetPrivateProfileInt(L"Options" , L"ExtAnsiColors" , 1, szGLOBAL_PROFILE);
 
     nScripterrorOutput  = ::GetPrivateProfileInt(L"Script" , L"ErrOutput", 0 , szGLOBAL_PROFILE);
 
@@ -537,6 +603,7 @@ CSmcDoc::~CSmcDoc()
 	::WritePrivateProfileInt(L"Options" , L"LineTimeStamps" , m_bShowTimestamps , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"StickScrollbar" , m_bStickScrollbar , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"ShowHiddenText", m_bShowHiddenText , szGLOBAL_PROFILE);
+	::WritePrivateProfileInt(L"Options" , L"ExtAnsiColors" , m_bExtAnsiColors , szGLOBAL_PROFILE);
 
     ::WritePrivateProfileInt(L"Script" , L"ErrOutput", nScripterrorOutput , szGLOBAL_PROFILE);
 
