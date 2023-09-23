@@ -81,6 +81,7 @@ using namespace std;
 #define DEFAULT_MAPPER_MESS TRUE
 #define DEFAULT_TAB_MESS TRUE
 #define DEFAULT_INPUT_MESS TRUE
+#define DEFAULT_EVENT_MESS FALSE
 
 enum {
     MSG_ALIAS = 0, 
@@ -98,6 +99,7 @@ enum {
 	MSG_MAPPER,
 	MSG_TAB,
 	MSG_INPUT,
+	MSG_EVENT,
 
 	MSG_MAXNUM
 };
@@ -116,7 +118,8 @@ static const wchar_t *MSG_TYPE_NAMES[MSG_MAXNUM] = {
 	L"oob",
 	L"mapper",
 	L"tabs",
-	L"userinput"
+	L"userinput",
+	L"event"
 };
 
 /**************************************************************************/

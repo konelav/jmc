@@ -56,6 +56,15 @@ enum INDICATOR_NUM{
 
 CTray sysTray;
 
+BEGIN_MESSAGE_MAP(CJMCStatus, CStatusBar)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
+	ON_WM_RBUTTONDBLCLK()
+END_MESSAGE_MAP()
+
 CJMCStatus::CJMCStatus()
 {
     m_bmpConnected.LoadBitmap (IDB_CONNECTED);
@@ -71,6 +80,52 @@ CSize CJMCStatus::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
 		ret.cy = m_nYsize + border.top + border.bottom + 2;
 	}
 	return ret;
+}
+
+void CJMCStatus::OnLButtonDown(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"LDown", nFlags, point);
+}
+void CJMCStatus::OnLButtonUp(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"LUp", nFlags, point);
+}
+void CJMCStatus::OnLButtonDblClk(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"LDblClk", nFlags, point);
+}
+void CJMCStatus::OnRButtonDown(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"RDown", nFlags, point);
+}
+void CJMCStatus::OnRButtonUp(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"RUp", nFlags, point);
+}
+void CJMCStatus::OnRButtonDblClk(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"RDblClk", nFlags, point);
+}
+void CJMCStatus::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point) {
+	CRect rect;
+	int index = 0;
+
+	GetItemRect(NUM_INDICATOR_INFO1, &rect);
+	if (rect.PtInRect(point))
+		index = 1;
+	GetItemRect(NUM_INDICATOR_INFO2, &rect);
+	if (rect.PtInRect(point))
+		index = 2;
+	GetItemRect(NUM_INDICATOR_INFO3, &rect);
+	if (rect.PtInRect(point))
+		index = 3;
+	GetItemRect(NUM_INDICATOR_INFO4, &rect);
+	if (rect.PtInRect(point))
+		index = 4;
+	GetItemRect(NUM_INDICATOR_INFO5, &rect);
+	if (rect.PtInRect(point))
+		index = 5;
+
+	if (index) {
+		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
+			swprintf(strGuiAction, L"status %d %ls %d", index, event, nFlags);
+			SetEvent(eventGuiAction);
+		}
+	}
 }
 
 extern int LengthWithoutANSI(const wchar_t* str);

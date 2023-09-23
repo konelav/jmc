@@ -1004,10 +1004,7 @@ void wt_command(wchar_t *arg)
 	if(iswdigit(*arg))
 	  iWaitState=_wtoi(arg);
 	if(!iWaitState && wcslen(mQueue))
-	{
 	  parse_input(mQueue);
-	  mQueue[0]=L'\0';
-	}
 
 }
 

@@ -50,6 +50,7 @@ void  newactive_session()
 	mesvar[MSG_MAPPER]=DEFAULT_MAPPER_MESS;
 	mesvar[MSG_TAB]=DEFAULT_TAB_MESS;
 	mesvar[MSG_INPUT]=DEFAULT_INPUT_MESS;
+	mesvar[MSG_EVENT]=DEFAULT_EVENT_MESS;
 }
 
 

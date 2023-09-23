@@ -138,6 +138,9 @@ extern HANDLE DLLEXPORT eventMudEmuTextArrives;
 extern int DLLEXPORT nMudEmuTextSize;
 extern char DLLEXPORT strMudEmuText[EMULATOR_BUFFER_SIZE];
 
+extern HANDLE DLLEXPORT eventGuiAction;
+extern wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE];
+
 extern int DLLEXPORT nScrollSize;
 
 //vls-begin// #system

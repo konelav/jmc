@@ -50,6 +50,8 @@ protected:
 
 
     void DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int StringPos = 0);
+
+	void HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point);
     
 // Operations
 public:
@@ -77,6 +79,8 @@ protected:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnCaptureChanged(CWnd *pWnd);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

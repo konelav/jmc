@@ -42,6 +42,8 @@ BEGIN_MESSAGE_MAP(CAnsiWnd, CWnd)
 	ON_WM_ERASEBKGND()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
@@ -514,24 +516,6 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
     }
 }
 
-
-
-void CAnsiWnd::OnLButtonDown(UINT nFlags, CPoint point) 
-{
-	CWnd::OnLButtonDown(nFlags, point);
-    SetCapture();
-    pDoc->m_bFrozen = TRUE;
-    m_bSelected = TRUE;
-
-	int col = point.x/pDoc->m_nCharX;
-	int row = (point.y-m_nYDiff)/pDoc->m_nYsize;
-	int x, y;
-	ConvertCharPosition(row, col, &y, &x);
-
-    m_nStartTrackY = m_nEndTrackY = m_nEndSelectY = m_nStartSelectY = y;
-    m_nStartTrackX = m_nEndTrackX = m_nStartSelectX = m_nEndSelectX = x;
-}
-
 static const wchar_t* SkipAnsi(const wchar_t* ptr)
 {
 	if (*ptr == ESC_SEQUENCE_MARK)
@@ -556,8 +540,64 @@ static const wchar_t* SkipAnsi(const wchar_t* ptr)
     return ptr;
 }
 
+void CAnsiWnd::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
+{
+	int col = point.x/pDoc->m_nCharX;
+	int row = (point.y-m_nYDiff)/pDoc->m_nYsize;
+	int x, y;
+	ConvertCharPosition(row, col, &y, &x);
+
+	CString word;
+	int nline = GetScrollPos(SB_VERT) + 1 + y;
+	if (0 <= nline && nline < m_strList.GetCount()) {
+		CString line = m_strList.GetAt(m_strList.FindIndex(nline));
+		const wchar_t *ptr = line;
+		int xpos = 0;
+		while (*ptr) {
+			if ( *ptr == ESC_SEQUENCE_MARK ) {
+				ptr = SkipAnsi(ptr);
+                continue;
+			}
+			if (iswspace(*ptr)) {
+				if (xpos >= x)
+					break;
+				word = "";
+			}
+			else
+				word += (*ptr);
+			xpos++;
+			ptr++;
+		}
+	}
+
+	if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
+		swprintf(strGuiAction, L"txt %ls %d %d %ls", event, m_wndCode, nFlags, word);
+		SetEvent(eventGuiAction);
+	}
+}
+
+void CAnsiWnd::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"LDown", nFlags, point);
+	CWnd::OnLButtonDown(nFlags, point);
+
+    SetCapture();
+    pDoc->m_bFrozen = TRUE;
+    m_bSelected = TRUE;
+
+	int col = point.x/pDoc->m_nCharX;
+	int row = (point.y-m_nYDiff)/pDoc->m_nYsize;
+	int x, y;
+	ConvertCharPosition(row, col, &y, &x);
+
+    m_nStartTrackY = m_nEndTrackY = m_nEndSelectY = m_nStartSelectY = y;
+    m_nStartTrackX = m_nEndTrackX = m_nStartSelectX = m_nEndSelectX = x;
+}
+
 void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point) 
 {
+	HandleMouseEvent(L"LUp", nFlags, point);
+
     if ( m_bSelected ) {
         ReleaseCapture();
         m_bSelected = FALSE;
@@ -631,6 +671,18 @@ void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point)
 		}
     }
 	CWnd::OnLButtonUp(nFlags, point);
+}
+
+void CAnsiWnd::OnRButtonDown(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"RDown", nFlags, point);
+	CWnd::OnRButtonDown(nFlags, point);
+}
+
+void CAnsiWnd::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"RUp", nFlags, point);
+	CWnd::OnRButtonUp(nFlags, point);
 }
 
 void CAnsiWnd::OnMouseMove(UINT nFlags, CPoint point) 

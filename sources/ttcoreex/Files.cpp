@@ -435,6 +435,11 @@ void write_command(wchar_t *arg)
             wcscpy(buffer+1, L"message userinput OFF\n");
             set_lines += buffer;
         }
+		if ( mesvar[MSG_EVENT] ) {
+            buffer[0] = cCommandChar ;
+            wcscpy(buffer+1, L"message event ON\n");
+            set_lines += buffer;
+        }
 
         // save togglesub/echo/multiaction etc states 
         buffer[0] = cCommandChar ;

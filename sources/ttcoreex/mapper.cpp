@@ -1322,7 +1322,10 @@ static vector<wstring> render_map(const RoomID &ID0, int width, int height, bool
 	int x0 = (width - style_w) / 2;
 	int y0 = (height - style_h) / 2;
 
-	vector<wstring> headers, footers;
+	vector<wstring> headers, footers, ret;
+
+	if (width < style_w || height < style_h)
+		return ret;
 
 	CMapRoom *root = findRoom(ID0);
 	if (root) {
@@ -1507,7 +1510,6 @@ static vector<wstring> render_map(const RoomID &ID0, int width, int height, bool
 		}
 	}
 
-	vector<wstring> ret;
 	for (y = miny; y <= maxy; y++) {
 		bool row_inserted = false;
 		for (x = minx; x <= maxx; x++) {

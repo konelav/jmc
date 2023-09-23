@@ -105,6 +105,9 @@ HANDLE DLLEXPORT eventMudEmuTextArrives;
 int DLLEXPORT nMudEmuTextSize = 0;
 char DLLEXPORT strMudEmuText[EMULATOR_BUFFER_SIZE];
 
+HANDLE DLLEXPORT eventGuiAction;
+wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE];
+
 //vls-begin// #system
 CRITICAL_SECTION DLLEXPORT secSystemExec;
 CRITICAL_SECTION DLLEXPORT secSystemList;
@@ -287,6 +290,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
         SetEvent(eventAllObjectEvent );
 
         eventMudEmuTextArrives = CreateEvent(NULL, TRUE, FALSE, NULL );
+		eventGuiAction = CreateEvent(NULL, TRUE, FALSE, NULL );
 
 //vls-begin// base dir
         GetModuleFileName(NULL, szBASE_DIR, MAX_PATH);
@@ -312,6 +316,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 //vls-end//
 //vls-begin// bugfix
         CloseHandle(eventMudEmuTextArrives);
+		CloseHandle(eventGuiAction);
 //vls-end//
 //vls-begin// script files
         CloseHandle(eventReadingFirst);
@@ -924,10 +929,7 @@ static void tick_func()
 	  if(iWaitState)
 		  iWaitState--;
 	  if(!iWaitState && wcslen(mQueue))
-	  {
 		  parse_input(mQueue);
-		  mQueue[0]=L'\0';
-	  }
   //* en:cycles
 	  dwSTime = iDSecToTick;
 	  update_timers(iDSecToTick);
@@ -1430,6 +1432,17 @@ void DLLEXPORT ReadMud()
 				}
 			}
 		}
+
+		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_OBJECT_0 ) {
+            static wchar_t buf[BUFFER_SIZE];
+			buf[0] = L'\0';
+			if (strGuiAction[0] && mesvar[MSG_EVENT])
+				swprintf(buf, rs::rs(1340), L"gui", strGuiAction);
+			strGuiAction[0] = L'\0';
+			ResetEvent(eventGuiAction);
+			if (buf[0])
+				tintin_puts(buf);
+        }
 	}
 
     // Do timer events 

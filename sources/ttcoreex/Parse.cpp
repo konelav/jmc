@@ -188,6 +188,10 @@ void parse_input(wchar_t *input, BOOL bExecuteNow)
 		return;
  	if( !bExecuteNow && parsing_stack )
 		return;
+
+	if (!iWaitState)
+		mQueue[0] = L'\0';
+	
 	parsing_stack = TRUE;
 	
 	//substitute_myvars(input, result);
@@ -227,7 +231,7 @@ void parse_input(wchar_t *input, BOOL bExecuteNow)
 			wcscpy(arg,p_command);
 		}
 //*/en
-        if(*command==cCommandChar) 
+        if(*command==cCommandChar && iWaitState == 0)
 		{
 			if (bDisplayCommands) {
 				// output command in square brackets
@@ -256,7 +260,9 @@ void parse_input(wchar_t *input, BOOL bExecuteNow)
             parse_tintin_command(command+1, arg);
 		}
 //* en:comments
-        else if(*command==cCommentChar);
+        else if(*command==cCommentChar && !(cCommentChar == cCommandChar && iWaitState > 0))
+		{
+		}
 //*/en
         else
 		{

@@ -83,11 +83,23 @@ protected:
 protected:
 	int m_nYsize;
 
+	void HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point);
+
 public:    
     CJMCStatus();
 	void SetFontHeight(int h) {m_nYsize = h;};
     virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
 	virtual CSize CalcFixedLayout(BOOL bStretch, BOOL bHorz);
+
+protected:
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+
+	DECLARE_MESSAGE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////
