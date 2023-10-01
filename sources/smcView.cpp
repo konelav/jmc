@@ -35,8 +35,13 @@ BEGIN_MESSAGE_MAP(CSmcView, CView)
 	ON_WM_ERASEBKGND()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 	ON_WM_RBUTTONDOWN()
 	ON_WM_RBUTTONUP()
+	ON_WM_RBUTTONDBLCLK()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_WM_MBUTTONDBLCLK()
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
@@ -870,31 +875,34 @@ void CSmcView::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
 	int x, y;
 	ConvertCharPosition(row, col, &y, &x);
 
-	CString word;
 	int nline = GetScrollPos(SB_VERT) + 1 + y;
+	CString line = L"", word = L"";
 	if (0 <= nline && nline < m_strList.GetCount()) {
-		CString line = m_strList.GetAt(m_strList.FindIndex(nline));
-		const wchar_t *ptr = line;
+		CString raw_line = m_strList.GetAt(m_strList.FindIndex(nline));
+		const wchar_t *ptr = raw_line;
 		int xpos = 0;
-		while (*ptr) {
+		bool word_ready = false;
+		while (*ptr && *ptr != L'\n') {
 			if ( *ptr == ESC_SEQUENCE_MARK ) {
 				ptr = SkipAnsi(ptr);
                 continue;
 			}
+			line += (*ptr);
 			if (iswspace(*ptr)) {
-				if (xpos >= x)
-					break;
-				word = "";
+				if (xpos < x)
+					word = "";
+				else
+					word_ready = true;
 			}
-			else
+			else if (!word_ready)
 				word += (*ptr);
 			xpos++;
 			ptr++;
 		}
 	}
-
+	
 	if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
-		swprintf(strGuiAction, L"txt %ls -1 %d %ls", event, nFlags, word);
+		swprintf(strGuiAction, L"txt %ls -1 %d %d %ls", event, nFlags, x, line);
 		SetEvent(eventGuiAction);
 	}
 }
@@ -1002,16 +1010,46 @@ void CSmcView::OnLButtonUp(UINT nFlags, CPoint point)
 	CView::OnLButtonUp(nFlags, point);
 }
 
+void CSmcView::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"LDblClk", nFlags, point);
+	CView::OnLButtonDblClk(nFlags, point);
+}
+
 void CSmcView::OnRButtonDown(UINT nFlags, CPoint point) 
 {
 	HandleMouseEvent(L"RDown", nFlags, point);
-	CWnd::OnRButtonDown(nFlags, point);
+	CView::OnRButtonDown(nFlags, point);
 }
 
 void CSmcView::OnRButtonUp(UINT nFlags, CPoint point) 
 {
 	HandleMouseEvent(L"RUp", nFlags, point);
-	CWnd::OnRButtonUp(nFlags, point);
+	CView::OnRButtonUp(nFlags, point);
+}
+
+void CSmcView::OnRButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"RDblClk", nFlags, point);
+	CView::OnRButtonDblClk(nFlags, point);
+}
+
+void CSmcView::OnMButtonDown(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MDown", nFlags, point);
+	CView::OnMButtonDown(nFlags, point);
+}
+
+void CSmcView::OnMButtonUp(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MUp", nFlags, point);
+	CView::OnMButtonUp(nFlags, point);
+}
+
+void CSmcView::OnMButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MDblClk", nFlags, point);
+	CView::OnMButtonDblClk(nFlags, point);
 }
 
 void CSmcView::OnMouseMove(UINT nFlags, CPoint point) 

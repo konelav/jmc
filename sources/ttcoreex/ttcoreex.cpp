@@ -106,7 +106,7 @@ int DLLEXPORT nMudEmuTextSize = 0;
 char DLLEXPORT strMudEmuText[EMULATOR_BUFFER_SIZE];
 
 HANDLE DLLEXPORT eventGuiAction;
-wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE];
+wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE+64];
 
 //vls-begin// #system
 CRITICAL_SECTION DLLEXPORT secSystemExec;
@@ -1434,9 +1434,18 @@ void DLLEXPORT ReadMud()
 		}
 
 		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_OBJECT_0 ) {
-            static wchar_t buf[BUFFER_SIZE];
+            static wchar_t buf[BUFFER_SIZE+128];
+			BOOL bRet = TRUE;
 			buf[0] = L'\0';
-			if (strGuiAction[0] && mesvar[MSG_EVENT])
+
+			if (strGuiAction[0]) {
+				pJmcObj->m_pvarEventParams[0] = (strGuiAction);
+				pJmcObj->m_pvarEventParams[1] = 0;
+				pJmcObj->m_pvarEventParams[2] = 0;
+				bRet = pJmcObj->Fire_GuiAction();
+			}
+
+			if (strGuiAction[0] && bRet && mesvar[MSG_EVENT])
 				swprintf(buf, rs::rs(1340), L"gui", strGuiAction);
 			strGuiAction[0] = L'\0';
 			ResetEvent(eventGuiAction);

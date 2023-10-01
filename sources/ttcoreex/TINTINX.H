@@ -80,6 +80,7 @@ extern wchar_t DLLEXPORT szPROFILESCRIPT[MAX_PATH];
 extern DLLEXPORT UINT MudCodePage;
 extern DLLEXPORT UINT MudCodePageUsed;
 extern DLLEXPORT UINT LogCodePage;
+extern DLLEXPORT UINT LogFlushMinPeriodSec;
 extern int DLLEXPORT read_file_contents(const wchar_t *FilePath, wchar_t *Buffer, int Capacity);
 extern int DLLEXPORT write_file_contents(const wchar_t *FilePath, const wchar_t *Buffer, int Length);
 extern int DLLEXPORT enumerate_codepage(int Index, wchar_t *Name, int MaxNameSize);
@@ -139,7 +140,7 @@ extern int DLLEXPORT nMudEmuTextSize;
 extern char DLLEXPORT strMudEmuText[EMULATOR_BUFFER_SIZE];
 
 extern HANDLE DLLEXPORT eventGuiAction;
-extern wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE];
+extern wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE+64];
 
 extern int DLLEXPORT nScrollSize;
 

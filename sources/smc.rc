@@ -362,11 +362,15 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON,129,81,129,9
     CONTROL         "Метки времени",IDC_HTML_TIMESTAMPS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,37,60,73,10
-    COMBOBOX        IDC_LOG_CODEPAGE,100,127,157,64,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_LOG_CODEPAGE,107,136,151,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Кодировка",IDC_STATIC,11,128,68,10
+    LTEXT           "Кодировка",IDC_STATIC,10,138,68,10
     CONTROL         "Метки времени",IDC_TEXT_TIMESTAMPS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,37,33,73,10
+    LTEXT           "Минимальный интервал записи на диск, с\n(""0"" отключает автозапись)",
+                    IDC_STATIC,10,105,97,24
+    EDITTEXT        IDC_LOG_FLUSH_PERIOD,107,113,151,11,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER
 END
 
 IDD_NEW_PROFILE DIALOG DISCARDABLE  0, 0, 166, 126
@@ -693,8 +697,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,2,0
- PRODUCTVERSION 3,7,2,0
+ FILEVERSION 3,7,2,1
+ PRODUCTVERSION 3,7,2,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -712,7 +716,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC MUD-клиент\0"
-            VALUE "FileVersion", "3, 7, 2, 0\0"
+            VALUE "FileVersion", "3, 7, 2, 1\0"
             VALUE "InternalName", "JMC\0"
             VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2023\0"
             VALUE "LegalTrademarks", "JMC\0"
@@ -1392,7 +1396,7 @@ BEGIN
     PUSHBUTTON      "Standard",IDC_RESTORE_DEFAULT,184,42,50,14
 END
 
-IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 246, 127
+IDD_LOG_PARAMS_PAGE DIALOG DISCARDABLE  0, 0, 246, 154
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1420,11 +1424,15 @@ BEGIN
                     BS_AUTORADIOBUTTON,129,81,99,9
     CONTROL         "Timestamps",IDC_HTML_TIMESTAMPS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,37,55,52,10
-    COMBOBOX        IDC_LOG_CODEPAGE,101,102,132,64,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_LOG_CODEPAGE,99,129,132,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Code page",IDC_STATIC,11,105,68,10
+    LTEXT           "Code page",IDC_STATIC,13,130,68,10
     CONTROL         "Timestamps",IDC_TEXT_TIMESTAMPS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,37,32,52,10
+    LTEXT           "Minimum flush period, s\n(""0"" disables flushing)",
+                    IDC_STATIC,11,102,83,18
+    EDITTEXT        IDC_LOG_FLUSH_PERIOD,100,105,131,12,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER
 END
 
 IDD_SCRIPT_PAGE DIALOG DISCARDABLE  0, 0, 209, 98
@@ -1707,8 +1715,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,2,0
- PRODUCTVERSION 3,7,2,0
+ FILEVERSION 3,7,2,1
+ PRODUCTVERSION 3,7,2,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1726,7 +1734,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "JMC application\0"
-            VALUE "FileVersion", "3, 7, 2, 0\0"
+            VALUE "FileVersion", "3, 7, 2, 1\0"
             VALUE "InternalName", "JMC\0"
             VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2023\0"
             VALUE "LegalTrademarks", "JMC\0"
@@ -1876,7 +1884,7 @@ BEGIN
     IDD_LOG_PARAMS_PAGE, DIALOG
     BEGIN
         RIGHTMARGIN, 241
-        BOTTOMMARGIN, 124
+        BOTTOMMARGIN, 151
     END
 
     IDD_JMC_ACTIONS, DIALOG

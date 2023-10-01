@@ -680,6 +680,7 @@ BOOL CSmcDoc::OnNewDocument()
 	bTextTimestamps = AfxGetApp()->GetProfileInt(L"ANSI" , L"TextLogTimestamps" , 0);
 	bLogAsUserSeen = AfxGetApp()->GetProfileInt(L"ANSI" , L"LogAsUserSeen" , 0);
 	LogCodePage = AfxGetApp()->GetProfileInt(L"ANSI" , L"LogCodePage" , 0);
+	LogFlushMinPeriodSec = AfxGetApp()->GetProfileInt(L"ANSI" , L"LogFlushMinPeriodSec" , 0);
 
 	bIACSendSingle = AfxGetApp()->GetProfileInt(L"Substitution" , L"IACSendSingle" , 0);
 	bIACReciveSingle = AfxGetApp()->GetProfileInt(L"Substitution" , L"IACReciveSingle" , 0);
@@ -816,6 +817,7 @@ BOOL CSmcDoc::DoProfileSave()
 	AfxGetApp()->WriteProfileInt(L"ANSI" , L"TextLogTimestamps" , bTextTimestamps);
 	AfxGetApp()->WriteProfileInt(L"ANSI" , L"LogAsUserSeen" , bLogAsUserSeen);
 	AfxGetApp()->WriteProfileInt(L"ANSI" , L"LogCodePage" , LogCodePage);
+	AfxGetApp()->WriteProfileInt(L"ANSI" , L"LogFlushMinPeriodSec" , LogFlushMinPeriodSec);
 
     ::WritePrivateProfileBinary(L"Colors" , L"Foreground", (LPBYTE)m_ForeColors, sizeof(m_ForeColors), szGLOBAL_PROFILE);
     ::WritePrivateProfileBinary(L"Colors" , L"Background", (LPBYTE)m_BackColors, sizeof(m_BackColors), szGLOBAL_PROFILE);

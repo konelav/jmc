@@ -43,6 +43,7 @@ public:
 	int		m_logTypeAnsi;
 	int		m_LogType;
 	CComboBox m_cCodePage;
+	CString m_strLogFlushMinPeriodSec;
 	//}}AFX_DATA
 
 	std::vector<int> m_vIndexToCPID;

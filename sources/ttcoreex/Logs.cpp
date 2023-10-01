@@ -19,6 +19,7 @@ BOOL bLogPassedLine = FALSE;
 //vls-end//
 
 UINT DLLEXPORT LogCodePage = 0;
+UINT DLLEXPORT LogFlushMinPeriodSec = 60;
 
 int DLLEXPORT nScrollSize = 300;
 ScrollLineRec *pScrollLinesBuffer = NULL;
@@ -40,6 +41,30 @@ DWORD lastTicker = 0;
 DWORD firstTicker = 0;
 
 GET_OUTPUTNAME_FUNC GetOutputName;
+
+static void FlushAllLogs()
+{
+	if (hLogFile.is_open())
+		hLogFile.flush();
+	for (int wnd = 0; wnd < MAX_OUTPUT; wnd++)
+		if (hOutputLogFile[wnd].is_open())
+			hOutputLogFile[wnd].flush();
+}
+static DWORD LastFlushTime = 0;
+static bool FlushAllLogsIfNeeded()
+{
+	if (!LogFlushMinPeriodSec)
+		return false;
+	
+	DWORD now = GetTickCount();
+	UINT elapsed = (now - LastFlushTime) / 1000;
+	if (elapsed < LogFlushMinPeriodSec)
+		return false;
+
+	FlushAllLogs();
+	LastFlushTime = now;
+	return true;
+}
 
 //vls-begin// multiple output
 void DLLEXPORT InitOutputNameFunc(GET_OUTPUTNAME_FUNC OutputNameFunc)
@@ -115,6 +140,7 @@ void log(wstring st)
 	}
 	WideCharToMultiByte(cp, 0, st.c_str(), st.length(), pLogBuffer, LogBufSize, NULL, NULL);
 	hLogFile.write(pLogBuffer, len);
+	FlushAllLogsIfNeeded();
 }
 
 void log(int wnd, wstring st)
@@ -138,6 +164,7 @@ void log(int wnd, wstring st)
 	}
 	WideCharToMultiByte(cp, 0, st.c_str(), st.length(), pLogBuffer, LogBufSize, NULL, NULL);
 	hOutputLogFile[wnd].write(pLogBuffer, len);
+	FlushAllLogsIfNeeded();
 }
 
 wstring loadHTMLFromResource(int name)

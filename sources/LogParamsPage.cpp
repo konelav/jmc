@@ -49,6 +49,7 @@ void CLogParamsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_WRITE_LOG_AS_SHOWN_BY_SERVER, m_nLogAs);
 	DDX_Radio(pDX, IDC_LOGTYPE_TEXT, m_LogType);
 	DDX_Control(pDX, IDC_LOG_CODEPAGE, m_cCodePage);
+	DDX_Text(pDX, IDC_LOG_FLUSH_PERIOD, m_strLogFlushMinPeriodSec);
 	//}}AFX_DATA_MAP
 }
 

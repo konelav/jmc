@@ -19,7 +19,8 @@
 		ID_Load, 
 		ID_Unload,
 		ID_Prompt,
-		ID_Telnet
+		ID_Telnet,
+		ID_GuiAction
 
     };
 

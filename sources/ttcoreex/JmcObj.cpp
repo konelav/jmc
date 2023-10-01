@@ -187,6 +187,9 @@ STDMETHODIMP CJmcObj::RegisterHandler(BSTR bstrEvent, BSTR bstrCode)
 	if ( *event == L'T' && !wcsicmp(event, L"TELNET" ) ){
         m_bstrEventsHandlers[ID_Telnet] = bstrCode;
     } else 
+	if ( *event == L'G' && !wcsicmp(event, L"GUIACTION" ) ){
+        m_bstrEventsHandlers[ID_GuiAction] = bstrCode;
+    } else 
         return E_INVALIDARG;
     return S_OK;
 }

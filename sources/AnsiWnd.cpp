@@ -42,8 +42,13 @@ BEGIN_MESSAGE_MAP(CAnsiWnd, CWnd)
 	ON_WM_ERASEBKGND()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 	ON_WM_RBUTTONDOWN()
 	ON_WM_RBUTTONUP()
+	ON_WM_RBUTTONDBLCLK()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_WM_MBUTTONDBLCLK()
 	ON_WM_MOUSEMOVE()
 	ON_WM_CAPTURECHANGED()
 	ON_WM_CREATE()
@@ -547,23 +552,26 @@ void CAnsiWnd::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
 	int x, y;
 	ConvertCharPosition(row, col, &y, &x);
 
-	CString word;
 	int nline = GetScrollPos(SB_VERT) + 1 + y;
+	CString line = L"", word = L"";
 	if (0 <= nline && nline < m_strList.GetCount()) {
-		CString line = m_strList.GetAt(m_strList.FindIndex(nline));
-		const wchar_t *ptr = line;
+		CString raw_line = m_strList.GetAt(m_strList.FindIndex(nline));
+		const wchar_t *ptr = raw_line;
 		int xpos = 0;
+		bool word_ready = false;
 		while (*ptr) {
 			if ( *ptr == ESC_SEQUENCE_MARK ) {
 				ptr = SkipAnsi(ptr);
                 continue;
 			}
+			line += (*ptr);
 			if (iswspace(*ptr)) {
-				if (xpos >= x)
-					break;
-				word = "";
+				if (xpos < x)
+					word = "";
+				else
+					word_ready = true;
 			}
-			else
+			else if (!word_ready)
 				word += (*ptr);
 			xpos++;
 			ptr++;
@@ -571,7 +579,7 @@ void CAnsiWnd::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
 	}
 
 	if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
-		swprintf(strGuiAction, L"txt %ls %d %d %ls", event, m_wndCode, nFlags, word);
+		swprintf(strGuiAction, L"txt %ls %d %d %d %ls", event, m_wndCode, nFlags, x, line);
 		SetEvent(eventGuiAction);
 	}
 }
@@ -597,7 +605,6 @@ void CAnsiWnd::OnLButtonDown(UINT nFlags, CPoint point)
 void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point) 
 {
 	HandleMouseEvent(L"LUp", nFlags, point);
-
     if ( m_bSelected ) {
         ReleaseCapture();
         m_bSelected = FALSE;
@@ -673,6 +680,12 @@ void CAnsiWnd::OnLButtonUp(UINT nFlags, CPoint point)
 	CWnd::OnLButtonUp(nFlags, point);
 }
 
+void CAnsiWnd::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"LDblClk", nFlags, point);
+	CWnd::OnLButtonDblClk(nFlags, point);
+}
+
 void CAnsiWnd::OnRButtonDown(UINT nFlags, CPoint point) 
 {
 	HandleMouseEvent(L"RDown", nFlags, point);
@@ -683,6 +696,30 @@ void CAnsiWnd::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	HandleMouseEvent(L"RUp", nFlags, point);
 	CWnd::OnRButtonUp(nFlags, point);
+}
+
+void CAnsiWnd::OnRButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"RDblClk", nFlags, point);
+	CWnd::OnRButtonDblClk(nFlags, point);
+}
+
+void CAnsiWnd::OnMButtonDown(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MDown", nFlags, point);
+	CWnd::OnMButtonDown(nFlags, point);
+}
+
+void CAnsiWnd::OnMButtonUp(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MUp", nFlags, point);
+	CWnd::OnMButtonUp(nFlags, point);
+}
+
+void CAnsiWnd::OnMButtonDblClk(UINT nFlags, CPoint point) 
+{
+	HandleMouseEvent(L"MDblClk", nFlags, point);
+	CWnd::OnMButtonDblClk(nFlags, point);
 }
 
 void CAnsiWnd::OnMouseMove(UINT nFlags, CPoint point) 

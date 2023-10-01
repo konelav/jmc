@@ -63,6 +63,9 @@ BEGIN_MESSAGE_MAP(CJMCStatus, CStatusBar)
 	ON_WM_RBUTTONDOWN()
 	ON_WM_RBUTTONUP()
 	ON_WM_RBUTTONDBLCLK()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_WM_MBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 CJMCStatus::CJMCStatus()
@@ -100,29 +103,50 @@ void CJMCStatus::OnRButtonUp(UINT nFlags, CPoint point) {
 void CJMCStatus::OnRButtonDblClk(UINT nFlags, CPoint point) {
 	HandleMouseEvent(L"RDblClk", nFlags, point);
 }
+void CJMCStatus::OnMButtonDown(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"MDown", nFlags, point);
+}
+void CJMCStatus::OnMButtonUp(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"MUp", nFlags, point);
+}
+void CJMCStatus::OnMButtonDblClk(UINT nFlags, CPoint point) {
+	HandleMouseEvent(L"MDblClk", nFlags, point);
+}
+
 void CJMCStatus::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point) {
 	CRect rect;
 	int index = 0;
+	const wchar_t *strInfo = L"";
 
 	GetItemRect(NUM_INDICATOR_INFO1, &rect);
-	if (rect.PtInRect(point))
+	if (rect.PtInRect(point)) {
 		index = 1;
+		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo1;
+	}
 	GetItemRect(NUM_INDICATOR_INFO2, &rect);
-	if (rect.PtInRect(point))
+	if (rect.PtInRect(point)) {
 		index = 2;
+		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo2;
+	}
 	GetItemRect(NUM_INDICATOR_INFO3, &rect);
-	if (rect.PtInRect(point))
+	if (rect.PtInRect(point)) {
 		index = 3;
+		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo3;
+	}
 	GetItemRect(NUM_INDICATOR_INFO4, &rect);
-	if (rect.PtInRect(point))
+	if (rect.PtInRect(point)) {
 		index = 4;
+		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo4;
+	}
 	GetItemRect(NUM_INDICATOR_INFO5, &rect);
-	if (rect.PtInRect(point))
+	if (rect.PtInRect(point)) {
 		index = 5;
+		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo5;
+	}
 
 	if (index) {
 		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
-			swprintf(strGuiAction, L"status %d %ls %d", index, event, nFlags);
+			swprintf(strGuiAction, L"status %ls %d %d %ls", event, index, nFlags, strInfo);
 			SetEvent(eventGuiAction);
 		}
 	}
@@ -707,6 +731,7 @@ void CMainFrame::OnOptionsOptions()
 	pg4.m_nLogAs = bLogAsUserSeen ? 1 : 0;
 
 	pg4.m_nLogCodePage = LogCodePage;
+	pg4.m_strLogFlushMinPeriodSec.Format(L"%d", LogFlushMinPeriodSec);
 	
     memcpy(&pg5.m_guidLang ,  &theApp.m_guidScriptLang, sizeof(GUID));
     pg5.m_bAllowDebug = bAllowDebug;
@@ -778,6 +803,7 @@ void CMainFrame::OnOptionsOptions()
 		bLogAsUserSeen = pg4.m_nLogAs;
         bAppendLogTitle = pg4.m_bAppendLogTitle;
 		LogCodePage = pg4.m_nLogCodePage;
+		LogFlushMinPeriodSec = _wtoi(pg4.m_strLogFlushMinPeriodSec);
 
         if ( memcmp(&theApp.m_guidScriptLang, &pg5.m_guidLang , sizeof(GUID) ) ) {
             memcpy(&theApp.m_guidScriptLang, &pg5.m_guidLang , sizeof(GUID) ) ;
@@ -1251,6 +1277,7 @@ void COutputBar::OnSize(UINT nType, int cx, int cy)
     if ( m_wndAnsi.GetSafeHwnd() == NULL ) 
         return ;
 
+	m_wndAnsi.ModifyStyleEx(WS_EX_CLIENTEDGE, 0,SWP_DRAWFRAME );
 
     m_wndAnsi.SetWindowPos(NULL, 0 , 0 , cx, cy, SWP_NOZORDER | SWP_NOMOVE);
 
