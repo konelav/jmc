@@ -36,6 +36,8 @@ jmc_special_variable jmc_vars[JMC_SPECIAL_VARIABLES_NUM]={
 
 		   {L"COMMAND", &variable_value_command},
 
-		   {L"FILENAME", &variable_value_filename}
+		   {L"FILENAME", &variable_value_filename},
+
+		   {L"GUIACTIONLINE", &variable_value_guiactionline}
 	   };
 #endif

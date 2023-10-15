@@ -146,7 +146,14 @@ void CJMCStatus::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint poin
 
 	if (index) {
 		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
-			swprintf(strGuiAction, L"status %ls %d %d %ls", event, index, nFlags, strInfo);
+			swprintf(strGuiAction, L"status %ls %d %lc%lc%lc%lc%lc %ls", event, index,
+				(nFlags & MK_CONTROL) ? L'C' : L'_',
+				(nFlags & MK_SHIFT) ? L'S' : L'_',
+				(nFlags & MK_LBUTTON) ? L'L' : L'_',
+				(nFlags & MK_MBUTTON) ? L'M' : L'_',
+				(nFlags & MK_RBUTTON) ? L'R' : L'_',
+				strInfo);
+			wcscpy(strGuiActionLine, strInfo);
 			SetEvent(eventGuiAction);
 		}
 	}

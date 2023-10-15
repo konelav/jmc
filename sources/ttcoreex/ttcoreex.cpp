@@ -107,6 +107,7 @@ char DLLEXPORT strMudEmuText[EMULATOR_BUFFER_SIZE];
 
 HANDLE DLLEXPORT eventGuiAction;
 wchar_t DLLEXPORT strGuiAction[BUFFER_SIZE+64];
+wchar_t DLLEXPORT strGuiActionLine[BUFFER_SIZE+64];
 
 //vls-begin// #system
 CRITICAL_SECTION DLLEXPORT secSystemExec;
@@ -144,6 +145,8 @@ wchar_t DLLEXPORT strProductName[256];
 wchar_t DLLEXPORT strProductVersion[256];
 
 wchar_t DLLEXPORT strLastCommand[BUFFER_SIZE];
+
+wchar_t sGuiActionLineVar[BUFFER_SIZE + 64];
 
 int mesvar[MSG_MAXNUM];
 
@@ -307,6 +310,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 		hPingThread = CreateThread(NULL, 0, &PingThread, NULL, 0, &dwPingThreadID);
 
 		strLastCommand[0] = L'\0';
+
+		sGuiActionLineVar[0] = L'\0';
 
 		last_line[0] = L'\0';
     }
@@ -1440,10 +1445,11 @@ void DLLEXPORT ReadMud()
 
 			if (strGuiAction[0]) {
 				pJmcObj->m_pvarEventParams[0] = (strGuiAction);
-				pJmcObj->m_pvarEventParams[1] = 0;
+				pJmcObj->m_pvarEventParams[1] = (strGuiActionLine);
 				pJmcObj->m_pvarEventParams[2] = 0;
 				bRet = pJmcObj->Fire_GuiAction();
 			}
+			wcscpy(sGuiActionLineVar, strGuiActionLine);
 
 			if (strGuiAction[0] && bRet && mesvar[MSG_EVENT])
 				swprintf(buf, rs::rs(1340), L"gui", strGuiAction);

@@ -199,6 +199,8 @@ extern wchar_t sLogName[BUFFER_SIZE];
 extern wchar_t sOutputLogName[MAX_OUTPUT][BUFFER_SIZE];
 //* /en
 
+extern wchar_t sGuiActionLineVar[BUFFER_SIZE+64];
+
 extern struct completenode *complete_head;
 extern int tick_size;
 extern int ticker_interrupted;
@@ -542,6 +544,7 @@ void variable_value_product_name(wchar_t *arg);
 void variable_value_product_version(wchar_t *arg);
 void variable_value_command(wchar_t *arg);
 void variable_value_filename(wchar_t *arg);
+void variable_value_guiactionline(wchar_t *arg);
 
 BOOL show_actions(wchar_t* left = NULL, CGROUP* pGroup = NULL);
 int do_one_antisub(wchar_t *line);
@@ -633,7 +636,7 @@ typedef struct jmc_cmd
 //*/en
 
 
-const int JMC_SPECIAL_VARIABLES_NUM = 27;
+const int JMC_SPECIAL_VARIABLES_NUM = 28;
 typedef struct jmc_special_variable_struct {
 	wchar_t *name;
 	void (*jmcfn)(wchar_t*);

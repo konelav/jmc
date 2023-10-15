@@ -514,3 +514,8 @@ void variable_value_command(wchar_t *arg)
 {
 	swprintf(arg, L"%ls", strLastCommand);
 }
+
+void variable_value_guiactionline(wchar_t *arg)
+{
+	wcscpy(arg, sGuiActionLineVar);
+}

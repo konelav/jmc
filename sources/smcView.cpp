@@ -902,7 +902,14 @@ void CSmcView::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
 	}
 	
 	if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
-		swprintf(strGuiAction, L"txt %ls -1 %d %d %ls", event, nFlags, x, line);
+		swprintf(strGuiAction, L"txt %ls -1 %lc%lc%lc%lc%lc %ls", event,
+			(nFlags & MK_CONTROL) ? L'C' : L'_',
+			(nFlags & MK_SHIFT) ? L'S' : L'_',
+			(nFlags & MK_LBUTTON) ? L'L' : L'_',
+			(nFlags & MK_MBUTTON) ? L'M' : L'_',
+			(nFlags & MK_RBUTTON) ? L'R' : L'_',
+			word);
+		wcscpy(strGuiActionLine, line);
 		SetEvent(eventGuiAction);
 	}
 }
