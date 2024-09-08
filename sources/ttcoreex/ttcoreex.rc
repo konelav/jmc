@@ -244,8 +244,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,7,2,2
- PRODUCTVERSION 3,7,2,2
+ FILEVERSION 3,7,2,3
+ PRODUCTVERSION 3,7,2,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -263,7 +263,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "TINTIN++ Module\0"
-            VALUE "FileVersion", "3, 7, 2, 2\0"
+            VALUE "FileVersion", "3, 7, 2, 3\0"
             VALUE "InternalName", "ttcoreex\0"
             VALUE "LegalCopyright", "\0"
             VALUE "LegalTrademarks", "\0"

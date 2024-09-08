@@ -487,7 +487,7 @@ int tls_close(SOCKET sock);
 //Telnet routines
 int get_telnet_option_num(const wchar_t *name);
 void get_telnet_option_name(unsigned int num, wchar_t *buf);
-void send_telnet_command(unsigned char command, unsigned char option = 0);
+void send_telnet_command(unsigned char command, int option = -1);
 void send_telnet_subnegotiation(unsigned char option, const wchar_t *output, int length, bool raw_bytes);
 void telnet_command(wchar_t *arg);
 void promptend_command(wchar_t *arg);

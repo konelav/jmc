@@ -9,6 +9,7 @@
 #include <vector>
 
 const TelnetOption TelnetOptions[TELNET_OPTIONS_NUM] = {
+	{TN_BINARY,    L"BINARY",L"Binary data stream"},
 	{TN_EOR_OPT,   L"EOR",   L"End-of-record"},							/* should be controlled by JMC */
 	{TN_AYT_OPT,   L"AYT",   L"Are you there?"},						/* should be controlled by JMC */
 	{TN_ECHO,      L"ECHO",  L"Server echoes user's input"},			/* should be controlled by JMC */
@@ -162,7 +163,7 @@ void TelnetMsg(wchar_t *type, int cmd, int opt)
 		swprintf(cmdstr, L"%d", cmd);
 	}
 
-	if(opt)
+	if(opt >= 0)
 		get_telnet_option_descr(opt, optstr);
 	else
 		wcscpy(optstr, L"");
@@ -175,12 +176,12 @@ void TelnetMsg(wchar_t *type, int cmd, int opt)
 	tintin_puts2(buf);
 }
 
-void send_telnet_command(unsigned char cmd, unsigned char opt)
+void send_telnet_command(unsigned char cmd, int opt)
 {
 	char szBuf[4], len = 0;
 	szBuf[len++] = (char)TN_IAC;
 	szBuf[len++] = (char)cmd;
-	if (opt)
+	if (opt >= 0)
 		szBuf[len++] = (char)opt;
 
 	tls_send(MUDSocket, szBuf, len);
@@ -198,7 +199,7 @@ void send_telnet_command(unsigned char cmd, unsigned char opt)
 	}
 }
 
-static void RecvCmd(int cmd, int opt)
+static void RecvCmd(int cmd, int opt = -1)
 {
 	TelnetMsg(L"recv", cmd, opt);
 
@@ -298,7 +299,7 @@ void telnet_command(wchar_t *arg)
 			tintin_puts2(tmp);
 	} else {
 		int opt = get_telnet_option_num(option);
-		if(opt <= 0) {
+		if(opt < 0) {
 			swprintf(tmp, rs::rs(1280), option);
 			tintin_puts2(tmp);
 		} else {
@@ -768,18 +769,18 @@ void do_telnet_protecol(const char* input, int length, int *used, char* output, 
  				switch(State) {
 					case TN_GA:
 						output[(*generated)++] = END_OF_PROMPT_MARK;
-						RecvCmd(State, 0);
+						RecvCmd(State);
 						State = '\0';
 						break;
 					case TN_EOR:
 						output[(*generated)++] = END_OF_PROMPT_MARK;
-						RecvCmd(State, 0);
+						RecvCmd(State);
 						State = '\0';
 						break;
 					case TN_AYT:
 						if (telnet_option_enabled(TN_AYT_OPT))
 							write_line_mud(L" ");
-						RecvCmd(State, 0);
+						RecvCmd(State);
 						State = '\0';
 						break;
 
@@ -791,7 +792,7 @@ void do_telnet_protecol(const char* input, int length, int *used, char* output, 
 						break;
 
 					case TN_SE:
-						RecvCmd(State, 0);
+						RecvCmd(State);
 						State = '\0';
 						SubnegotiationBuffer.push_back(0);
 						recv_telnet_subnegotiation(CurrentSubnegotiation, SubnegotiationBuffer.begin(), SubnegotiationBuffer.size() - 1);
@@ -851,7 +852,7 @@ void do_telnet_protecol(const char* input, int length, int *used, char* output, 
 						State = '\0';
 						break;
 					default:
-						RecvCmd(State, 0);
+						RecvCmd(State);
 						State = '\0';
 						break;
 				}

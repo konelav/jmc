@@ -14,6 +14,7 @@
 #define SOCKCOMPRESSING		04000	/* zlib compression (MCCP) is ON */
 #define SOCKNAWS		   010000	/* negotiations about window size enabled */
 
+#define TN_BINARY       0000    /* binary option */
 #define TN_ECHO         0001    /* echo option */
 #define TN_SGA          0003    /* suppress GOAHEAD option */
 #define TN_NAWS         0037    /* Negotiate About Window Size */
@@ -88,7 +89,7 @@
 #define TN_DONT         0376    /* Stop ~ing!, or nack for WILL */
 #define TN_IAC          0377    /* telnet Is A Command character */
 
-#define TELNET_OPTIONS_NUM 15
+#define TELNET_OPTIONS_NUM 16
 typedef struct
 {
 	unsigned int Code;
