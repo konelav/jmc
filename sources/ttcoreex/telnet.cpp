@@ -221,14 +221,16 @@ extern DLLEXPORT HANDLE hExLog;
 
 static void start_decompressing()
 {
-	mccp_stream.zalloc = Z_NULL;
-    mccp_stream.zfree = Z_NULL;
-    mccp_stream.opaque = Z_NULL;
-    mccp_stream.avail_in = 0;
-    mccp_stream.next_in = Z_NULL;
-    int ret = inflateInit(&mccp_stream);
-    if (ret != Z_OK) {
-        //what should we do?
+	if(!(SocketFlags & SOCKCOMPRESSING)) {
+		mccp_stream.zalloc = Z_NULL;
+		mccp_stream.zfree = Z_NULL;
+		mccp_stream.opaque = Z_NULL;
+		mccp_stream.avail_in = 0;
+		mccp_stream.next_in = Z_NULL;
+		int ret = inflateInit(&mccp_stream);
+		if (ret != Z_OK) {
+			//what should we do?
+		}
 	}
 	SocketFlags |= SOCKCOMPRESSING;
 }
@@ -436,7 +438,7 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 {
 	int ret = 0;
 	increase_capacity(&pOutputData, &OutputCapacity, maxsize);
-	if (OutputSize < OutputCapacity && (InputSize > 0 || OutputSize >0)) {
+	while (OutputSize < OutputCapacity && (InputSize > 0 || OutputSize >0) && maxsize > 0) {
 		int input_processed = 0, output_generated = 0;
 
 		if (InputSize > 0) {
@@ -514,11 +516,18 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 			swprintf(buf, rs::rs(1292), processed, retConv);
 			tintin_puts2(buf);
 		}
+		else {
+			dst += len;
+			maxsize -= len;
+		}
 
 		if (processed < OutputSize)
 			memmove(pOutputData, pOutputData + processed, OutputSize - processed);
 		OutputSize -= processed;
 		ret += len;
+
+		if (input_processed <= 0 && processed <= 0)
+			break;
 	}
 	return ret;
 }

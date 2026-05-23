@@ -606,6 +606,10 @@ START1:
 		tintin_puts2(L"#Can't disable Nagle's algorithm");
 	}
 
+	//if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enable_opt, sizeof(enable_opt))) {
+	//	tintin_puts2(L"#Can't enable KeepAlive for connection");
+	//}
+
     sockaddr.sin_family=AF_INET;
 
 
@@ -1154,7 +1158,9 @@ void read_mud(void )
 	unsigned long len;
 	bool error = false;
 
-	if( ioctlsocket(MUDSocket, FIONREAD, &len) == SOCKET_ERROR || len == 0 ) {
+	if( ioctlsocket(MUDSocket, FIONREAD, &len) == SOCKET_ERROR ) {
+		error = true;
+	} else if( len == 0 ) {
 		error = true;
 	} else {
 		decoded = 0;
@@ -1162,7 +1168,8 @@ void read_mud(void )
 			int to_read = len;
 			if( to_read > sizeof(buffer) )
 				to_read = sizeof(buffer);
-			if( (didget = tls_recv(MUDSocket, buffer, to_read)) < 0 ) {
+			didget = tls_recv(MUDSocket, buffer, to_read);
+			if( didget < 0 ) {
 				error = true;
 				break;
 			} else if (didget == 0) {
@@ -1182,7 +1189,11 @@ void read_mud(void )
 #endif
 
 			telnet_push_back(buffer, didget);
-			while( (didget = telnet_pop_front(processed, sizeof(processed)/sizeof(wchar_t) - 1)) > 0 ) {
+			while (1) {
+				didget = telnet_pop_front(processed, sizeof(processed)/sizeof(wchar_t) - 1);
+				if (didget <= 0)
+					return;
+
 				decoded += didget;
 				processed[didget] = L'\0';
 

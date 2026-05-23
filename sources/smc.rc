@@ -718,7 +718,7 @@ BEGIN
             VALUE "FileDescription", "JMC MUD-êëèåíò\0"
             VALUE "FileVersion", "3, 7, 2, 3\0"
             VALUE "InternalName", "JMC\0"
-            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2024\0"
+            VALUE "LegalCopyright", "© Copyright Sergey Iliyn 1998\r\n© Likhtarov Anton 2002\r\n© Shchepansky Bohdan, Kim Yursen, Ennin 2006-2007\r\n© NeReVaR 2012-2013\r\nOpenov Sergey 2016-2026\0"
             VALUE "LegalTrademarks", "JMC\0"
             VALUE "OriginalFilename", "JMC.EXE\0"
             VALUE "PrivateBuild", "\0"

@@ -175,9 +175,51 @@ BOOL CEditBar::PreTranslateMessage(MSG* pMsg)
 
             }
             break;
+		case VK_BACK:
+			if ( GetKeyState(VK_CONTROL)&0x1000){
+				pEdit = (CEdit*)GetDlgItem(IDC_EDIT);
+                CString strText;
+                pEdit->GetWindowText (strText);
+
+                if ( !strText.GetLength () ) 
+                    return TRUE;
+
+                int start, end;
+                pEdit->GetSel (start, end);
+
+				int remove_from = end;
+
+				if (remove_from > 0) {
+					if (strText[remove_from - 1] != ' ') {
+						while (remove_from > 0 && strText[remove_from - 1] != ' ')
+							remove_from--;
+					}
+					else if (remove_from > 1 && strText[remove_from - 2] != ' ') {
+						remove_from--;
+						while (remove_from > 0 && strText[remove_from - 1] != ' ')
+							remove_from--;
+					}
+					else {
+						while (remove_from > 0 && strText[remove_from -1] == ' ')
+							remove_from--;
+					}	
+				}
+				strText = strText.Left(remove_from) + strText.Mid(end);
+
+				end = remove_from;
+				if (start > end)
+					start = end;
+
+				pEdit->SetWindowText(strText);
+				pEdit->SetSel(start, end);
+
+				return TRUE;
+			}
+			break;
         case VK_UP:
             if ( GetKeyState(VK_CONTROL) >= 0 ) {
-                PrevLine();
+                pEdit = (CEdit*)GetDlgItem(IDC_EDIT);
+                pEdit->Copy();
                 return TRUE;
             } else 
                 return FALSE;
