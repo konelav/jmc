@@ -44,11 +44,11 @@ GET_OUTPUTNAME_FUNC GetOutputName;
 
 static void FlushAllLogs()
 {
-	if (hLogFile.is_open())
-		hLogFile.flush();
+	if (hLogFile)
+		FlushFileBuffers(hLogFile);
 	for (int wnd = 0; wnd < MAX_OUTPUT; wnd++)
-		if (hOutputLogFile[wnd].is_open())
-			hOutputLogFile[wnd].flush();
+		if (hOutputLogFile[wnd])
+			FlushFileBuffers(hOutputLogFile[wnd]);
 }
 static DWORD LastFlushTime = 0;
 static bool FlushAllLogsIfNeeded()
@@ -126,7 +126,7 @@ static char *pLogBuffer = NULL;
 static int LogBufSize = 0;
 void log(wstring st)
 {
-	if (!hLogFile.is_open())
+	if (!hLogFile)
 		return;
 		
 	//hLogFile << st;
@@ -139,7 +139,8 @@ void log(wstring st)
 		pLogBuffer = (char*)realloc(pLogBuffer, LogBufSize);
 	}
 	WideCharToMultiByte(cp, 0, st.c_str(), st.length(), pLogBuffer, LogBufSize, NULL, NULL);
-	hLogFile.write(pLogBuffer, len);
+	DWORD written = 0;
+	WriteFile(hLogFile, pLogBuffer, len, &written, 0);
 	FlushAllLogsIfNeeded();
 }
 
@@ -150,7 +151,7 @@ void log(int wnd, wstring st)
 		return;
 	}
 
-	if (!hOutputLogFile[wnd].is_open())
+	if (!hOutputLogFile[wnd])
 		return;
 		
 	//hOutputLogFile[wnd] << st;
@@ -163,7 +164,8 @@ void log(int wnd, wstring st)
 		pLogBuffer = (char*)realloc(pLogBuffer, LogBufSize);
 	}
 	WideCharToMultiByte(cp, 0, st.c_str(), st.length(), pLogBuffer, LogBufSize, NULL, NULL);
-	hOutputLogFile[wnd].write(pLogBuffer, len);
+	DWORD written = 0;
+	WriteFile(hOutputLogFile, pLogBuffer, len, &written, 0);
 	FlushAllLogsIfNeeded();
 }
 
@@ -207,7 +209,7 @@ wstring loadHTMLFromFile(const wchar_t *filename)
 
 BOOL CloseMainLog(wchar_t *logName, BOOL logHTML)
 {
-    if (hLogFile.is_open()) { // Close log file now opened 
+    if (hLogFile) { // Close log file now opened 
         if(mesvar[MSG_LOG]) {
 			wchar_t message[BUFFER_SIZE];
 			swprintf(message, rs::rs(1024), logName);
@@ -218,7 +220,8 @@ BOOL CloseMainLog(wchar_t *logName, BOOL logHTML)
 			log(html_footer);
         }
 
-		hLogFile.close();
+		CloseHandle(hLogFile);
+		hLogFile = NULL;
 
 		wcscpy(sLogName, L"");
 		
@@ -230,14 +233,15 @@ BOOL CloseMainLog(wchar_t *logName, BOOL logHTML)
 
 BOOL CloseWNDLog(int wnd, wchar_t *logName)
 {
-    if (hOutputLogFile[wnd].is_open()) { // Close log file now opened 
+    if (hOutputLogFile[wnd]) { // Close log file now opened 
         if(mesvar[MSG_LOG]) {
 			wchar_t message[BUFFER_SIZE];
 			swprintf(message, rs::rs(1024), logName);
 			tintin_puts2(message);
 		}
         
-		hOutputLogFile[wnd].close();
+		CloseHandle(hOutputLogFile[wnd]);
+		hOutputLogFile[wnd] = NULL;
 
 		wcscpy(sOutputLogName[wnd], L"");
 
@@ -254,12 +258,14 @@ BOOL StartMainLog(wchar_t* logName, BOOL logMode, BOOL logHTML)
 	lastTicker = firstTicker = 0;
 
 	if (logMode && !logHTML)
-		hLogFile.open(W2A(logName), ios::out | ios::binary | ios::app );
+		hLogFile = CreateFile(logName, FILE_APPEND_DATA | FILE_GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL); 
 	else 
-		hLogFile.open(W2A(logName), ios::out | ios::binary );
+		hLogFile = CreateFile(logName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (!hLogFile.is_open())
+	if (hLogFile == INVALID_HANDLE_VALUE) {
+		hLogFile = NULL;
 		return FALSE;
+	}
 
     // Do HTML Log pereference
     if ( logHTML ) {
@@ -292,9 +298,9 @@ BOOL StartWNDLog(int wnd, wchar_t* logName, BOOL logMode)
 	USES_CONVERSION;
 
 	if (logMode)
-		hOutputLogFile[wnd].open(W2A(logName), ios::out | ios::binary | ios::app );
+		hOutputLogFile[wnd] = CreateFile(logName, FILE_APPEND_DATA | FILE_GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	else 
-		hOutputLogFile[wnd].open(W2A(logName), ios::out | ios::binary );
+		hOutputLogFile[wnd] = CreateFile(logName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	return hOutputLogFile[wnd] != NULL ? TRUE : FALSE;
 }
@@ -632,16 +638,18 @@ wstring processLine(const wchar_t *charInput, DWORD TimeStamp)
  */
 void StopLogging()
 {
-    if (hLogFile.is_open()) {
+    if (hLogFile) {
         if ( bCurLogHTML ) {
 			log(html_footer);
 		}
-		hLogFile.close();
+		CloseHandle(hLogFile);
+		hLogFile = NULL;
     }
 
     for (int i = 0; i < MAX_OUTPUT; i++) {
-        if (hOutputLogFile[i].is_open()) {	
-			hOutputLogFile[i].close();
+        if (hOutputLogFile[i]) {	
+			CloseHandle(hOutputLogFile[i]);
+			hOutputLogFile[i] = NULL;
 			sOutputLogName[i][0] = '\0';
         }
     }

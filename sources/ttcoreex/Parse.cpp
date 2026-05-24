@@ -249,7 +249,7 @@ void parse_input(wchar_t *input, BOOL bExecuteNow)
 				tintin_puts2(strOutputBuffer);
 
 				if (bLogAsUserSeen) {
-					if (hLogFile.is_open()) {
+					if (hLogFile) {
 						log(strInputCommand);
 						log(L"\n");
 					}

@@ -130,9 +130,9 @@ wchar_t verbatim_char=DEFAULT_VERBATIM_CHAR;
 int path_length;
 int old_more_coming,more_coming;
 wchar_t last_line[BUFFER_SIZE];
-ofstream hLogFile;
+HANDLE hLogFile;
 UINT LogFileCodePage;
-ofstream hOutputLogFile[MAX_OUTPUT];
+HANDLE hOutputLogFile[MAX_OUTPUT];
 //* en: enhanced logs
 wchar_t sLogName[BUFFER_SIZE];
 wchar_t sOutputLogName[MAX_OUTPUT][BUFFER_SIZE];
@@ -231,6 +231,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 
 	WSADATA			wData;
 	WORD			wVersion = MAKEWORD(1,1);
+
+	hLogFile = 0;
+	memset(&hOutputLogFile, 0, sizeof(hOutputLogFile));
     if (dwReason == DLL_PROCESS_ATTACH)
     {
 	    if( WSAStartup(wVersion, &wData) )
@@ -404,7 +407,7 @@ void tintin_puts3(const wchar_t *cptr, int wnd)
     wcscat(buff, cptr);
     wcscat(buff, L"\n");
 
-    if ( hOutputLogFile[wnd].is_open() ) {
+    if ( hOutputLogFile[wnd] ) {
 		log(wnd, processTEXT(wstring(cptr)));
 		log(wnd, L"\n");
 	}
@@ -1108,7 +1111,7 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 			}
 
             if(!bLogPassedLine && (bLogAsUserSeen || FromServer) && wcscmp(line_to_log, L".")) {
-				if(hLogFile.is_open()) {
+				if(hLogFile) {
 					log(processLine(line_to_log));
 					log(L"\n");
 				}
@@ -1559,7 +1562,7 @@ BOOL  DLLEXPORT IsConnected()
 
 BOOL  DLLEXPORT IsLogging()
 {
-    return (BOOL)hLogFile.is_open();
+    return (BOOL)(hLogFile != NULL);
 }
 
 BOOL  DLLEXPORT IsPathing()

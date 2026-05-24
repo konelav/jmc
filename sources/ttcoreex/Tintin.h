@@ -220,9 +220,9 @@ extern BOOL bMultiAction, bMultiHighlight;
 extern struct listnode *common_subs;
 extern struct listnode *common_antisubs, *common_pathdirs, *common_path;
 extern wchar_t vars[10][BUFFER_SIZE]; /* the %0, %1, %2,....%9 variables */
-extern ofstream hLogFile;
+extern HANDLE hLogFile;
 //vls-begin// multiple output
-extern ofstream hOutputLogFile[MAX_OUTPUT];
+extern HANDLE hOutputLogFile[MAX_OUTPUT];
 //vls-end//
 extern int path_length;
 //extern int old_more_coming,more_coming;

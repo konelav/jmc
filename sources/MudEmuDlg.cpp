@@ -74,7 +74,7 @@ void CMudEmuDlg::OnStartStopLog()
 		return;
 	}
 
-    m_hLogFile  = CreateFile(m_strLogPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, NULL, NULL );
+    m_hLogFile  = CreateFileW(m_strLogPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, NULL, NULL );
     if ( m_hLogFile != INVALID_HANDLE_VALUE ) { 
 		m_StartStopButton.SetWindowText(L"Stop");
 		m_SendButton.EnableWindow(FALSE);
