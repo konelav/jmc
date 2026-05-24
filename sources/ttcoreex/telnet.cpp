@@ -261,9 +261,10 @@ static void do_decompressing(const char *src, int size, int *used, char *dst, in
 	*used = size - mccp_stream.avail_in;
 	*decompressed = capacity - mccp_stream.avail_out;
 
-	if (ret != Z_OK)
+	if (ret != Z_OK) {
+		tintin_puts2(rs::rs(1341));
 		stop_decompressing();
-
+	}
 }
 
 void telnet_command(wchar_t *arg) 
@@ -438,18 +439,20 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 {
 	int ret = 0;
 	increase_capacity(&pOutputData, &OutputCapacity, maxsize);
-	while (OutputSize < OutputCapacity && (InputSize > 0 || OutputSize >0) && maxsize > 0) {
+	while (OutputSize < OutputCapacity && maxsize > 0) {
 		int input_processed = 0, output_generated = 0;
 
-		if (InputSize > 0) {
-			if (SocketFlags & SOCKCOMPRESSING) {
+		if (SocketFlags & SOCKCOMPRESSING) {
+			if (InputSize > 0) {
 				increase_capacity(&pDecompressedData, &DecompressedCapacity, DecompressedSize + maxsize);
 
 				int decompressed = 0;
 				do_decompressing((const char*)pInputData, InputSize, &input_processed, 
 								 (char*)pDecompressedData + DecompressedSize, DecompressedCapacity - DecompressedSize, &decompressed);
 				DecompressedSize += decompressed;
-				
+			}
+
+			if (DecompressedSize > 0) {
 				int processed = 0;
 				do_telnet_protecol((const char*)pDecompressedData, DecompressedSize, &processed,
 								   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
@@ -457,10 +460,10 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 				if (processed < DecompressedSize)
 					memmove(pDecompressedData, pDecompressedData + processed, DecompressedSize - processed);
 				DecompressedSize -= processed;
-			} else {
-				do_telnet_protecol((const char*)pInputData, InputSize, &input_processed,
-								   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
 			}
+		} else if (InputSize > 0) {
+			do_telnet_protecol((const char*)pInputData, InputSize, &input_processed,
+							   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
 		}
 		
 		if (input_processed < InputSize)

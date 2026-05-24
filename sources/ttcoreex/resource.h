@@ -7,6 +7,7 @@
 #define IDR_JMCOBJ                      104
 #define IDR_HTML_HEAD                   201
 #define IDS_STRING1340                  1340
+#define IDS_STRING1341                  1341
 
 // Next default values for new objects
 // 

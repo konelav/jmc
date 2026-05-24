@@ -697,6 +697,7 @@ BEGIN
     1338                    "#userinput: display/new line: "
     1339                    "#FORMAT: #userinput disable|prompt|newline"
     IDS_STRING1340          "#event %ls %ls"
+    IDS_STRING1341          "#mccp decompression error"
 END
 
 #endif    // English (U.S.) resources

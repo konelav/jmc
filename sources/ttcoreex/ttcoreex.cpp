@@ -1192,7 +1192,7 @@ void read_mud(void )
 			while (1) {
 				didget = telnet_pop_front(processed, sizeof(processed)/sizeof(wchar_t) - 1);
 				if (didget <= 0)
-					return;
+					break;
 
 				decoded += didget;
 				processed[didget] = L'\0';

@@ -218,8 +218,7 @@ BOOL CEditBar::PreTranslateMessage(MSG* pMsg)
 			break;
         case VK_UP:
             if ( GetKeyState(VK_CONTROL) >= 0 ) {
-                pEdit = (CEdit*)GetDlgItem(IDC_EDIT);
-                pEdit->Copy();
+                PrevLine();
                 return TRUE;
             } else 
                 return FALSE;
