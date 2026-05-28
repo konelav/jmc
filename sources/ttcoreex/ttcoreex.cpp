@@ -1071,7 +1071,7 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 {
     wchar_t linebuffer[BUFFER_SIZE], *cpsource, *cpdest;
 	wchar_t line_to_log[BUFFER_SIZE];
-    int LastLineLen = 0, n, destlen, src_eol, forced_eol;
+    int LastLineLen = 0, n, destlen, src_eol, src_eop, forced_eol;
 
     cpsource = buffer; 
     cpdest = linebuffer;
@@ -1093,9 +1093,10 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
             continue;
         }
 
-		src_eol = (*cpsource == L'\n' || *cpsource == END_OF_PROMPT_MARK);
+		src_eol = (*cpsource == L'\n');
+		src_eop = (*cpsource == END_OF_PROMPT_MARK);
 		forced_eol = (destlen >= BUFFER_SIZE - 2) ? 1 : 0;
-        if(src_eol || forced_eol) {
+        if(src_eol || src_eop || forced_eol) {
             *cpdest = L'\0';
 			
 			if ( !bLogAsUserSeen ) {
@@ -1103,7 +1104,7 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 			}
             if ( bProcess ) { 
                 do_one_line(linebuffer);
-				if (*cpsource == END_OF_PROMPT_MARK)
+				if (src_eop)
 					do_multiline();
 			}
 			if ( bLogAsUserSeen ) {
@@ -1123,13 +1124,13 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
 
             if( wcscmp(linebuffer, L".") ) {
                 n = wcslen(linebuffer);
-				linebuffer[n++] = (src_eol ? *cpsource : L'\n');
+				linebuffer[n++] = ((src_eol || src_eop) ? *cpsource : L'\n');
 				linebuffer[n] = L'\0';
 				DirectOutputFunction(linebuffer, 0);// out to main window
             }
 			last_line[0] = L'\0';
 
-			if (src_eol)
+			if (src_eol || src_eop)
 				cpsource++;
 
             cpdest = linebuffer;
@@ -1141,7 +1142,7 @@ static void process_incoming(wchar_t* buffer, BOOL FromServer)
     }
     *cpdest=L'\0';
 
-	if (wcscmp(linebuffer, L".")) {
+	if (linebuffer[0] && wcscmp(linebuffer, L".")) {
 		wcscpy(last_line , linebuffer);
 		DirectOutputFunction(linebuffer, 0);// out to main window
 		lastRecvd = GetTickCount();
@@ -1342,12 +1343,11 @@ void DLLEXPORT ReadMud()
 					}
                     bDelayedActionDelete = FALSE;
                     SetEvent(eventAllObjectEvent);
-                } else {
-					return;
-				}
+                }
 			}
         }
-    } else {
+    }
+	{
         if ( WaitForSingleObject (eventMudEmuTextArrives, 0 ) == WAIT_OBJECT_0 ) {
             static wchar_t buf[BUFFER_SIZE+32];
 			if (nMudEmuTextSize > 0) {
@@ -1381,7 +1381,7 @@ void DLLEXPORT ReadMud()
 
 				buf[len] = 0;
             
-				if ( len > 0 && buf[len-1] != L'\x0A' && buf[len-1]!= L'\x01' )
+				if ( len > 0 && buf[len-1] != L'\n' && buf[len-1]!= END_OF_PROMPT_MARK )
 					more_coming = 1;
 				else 
 					more_coming = 0;

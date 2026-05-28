@@ -258,9 +258,9 @@ BOOL StartMainLog(wchar_t* logName, BOOL logMode, BOOL logHTML)
 	lastTicker = firstTicker = 0;
 
 	if (logMode && !logHTML)
-		hLogFile = CreateFile(logName, FILE_APPEND_DATA | FILE_GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL); 
+		hLogFile = CreateFile(logName, FILE_APPEND_DATA | FILE_GENERIC_READ, 0, NULL, OPEN_ALWAYS, NULL, NULL); 
 	else 
-		hLogFile = CreateFile(logName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		hLogFile = CreateFile(logName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, NULL, NULL);
 
 	if (hLogFile == INVALID_HANDLE_VALUE) {
 		hLogFile = NULL;
@@ -572,7 +572,7 @@ wstring processRMA(wstring strInput, DWORD TimeStamp)
 	currTicker = TimeStamp;
 
     if ( currTicker - lastTicker ) {
-		strOutput = strprintf(L"%lcp:%dm", ANSI_COMMAND_CHAR, currTicker - lastTicker);
+		strOutput = strprintf(L"%lc%lc%lc%d%lc", ANSI_COMMAND_CHAR, RMA_COMMAND, RMA_PAUSE, currTicker - lastTicker, RMA_END);
 		strOutput += strInput;
     } else {
 		strOutput = strInput;
@@ -590,7 +590,7 @@ wstring processTEXT(wstring strInput)
 	int escPos = 0,
 		endEscPos = 0;
 
-	while ( (escPos = strOutput.find(L'\x1B', escPos)) != wstring::npos) {
+	while ( (escPos = strOutput.find(ESC_SEQUENCE_MARK, escPos)) != wstring::npos) {
 		if ( (endEscPos = strOutput.find(L'm', escPos)) == wstring::npos ) {
 			//incorrect escape sequence, erase entire wstring
 			strOutput.erase(escPos);

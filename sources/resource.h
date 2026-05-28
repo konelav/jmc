@@ -174,6 +174,7 @@
 #define IDC_DISPLAY_STICK_SCROLLBAR     1137
 #define IDC_DISPLAY_EXT_ANSI_COLORS     1138
 #define IDC_LOG_FLUSH_PERIOD            1141
+#define IDC_PROMPT_NEWLINE              1143
 #define ID_OPTIONS_SCROLLBUFFER         32771
 #define ID_OPTIONS_FONT                 32772
 #define ID_OPTIONS_HOTKEYS              32774
@@ -241,9 +242,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        179
+#define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         32809
-#define _APS_NEXT_CONTROL_VALUE         1143
+#define _APS_NEXT_CONTROL_VALUE         1145
 #define _APS_NEXT_SYMED_VALUE           108
 #endif
 #endif

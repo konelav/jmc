@@ -697,6 +697,7 @@ void CMainFrame::OnOptionsOptions()
 		pg1.m_nUserInputHide = 2;
 
 	pg1.m_nMudCodePage = MudCodePage;
+	pg1.m_nPromptNewline = pDoc->m_nPromptNewline;
 
 
     // Fill subst params
@@ -784,6 +785,7 @@ void CMainFrame::OnOptionsOptions()
         MoreComingDelay = pg1.m_nTrigDelay;
 
 		MudCodePage = pg1.m_nMudCodePage;
+		pDoc->m_nPromptNewline = (CSmcDoc::EPromptNewlineType)pg1.m_nPromptNewline;
 
         bSubstitution = pg2.m_bAllowSubst ;
         EnterCriticalSection(&secSubstSection);

@@ -221,13 +221,30 @@ static void AddToOutList(const wchar_t* str, int wndCode)
 			set_tail = true;
 		}
 	} else if (prompt_line) {
-		TailLen--; //suppress END_OF_PROMPT_MARK char
 		if (user_input && !bInputOnNewLine) {
-			set_tail = true;
-			copy_tail = true;
+			strTail.SetAt(TailLen-1, L'\n');
+			set_tail = copy_tail = true;
+		} else if (jmc_message) {
+			set_tail = copy_tail = false;
 		} else {
-			strTail.Replace(END_OF_PROMPT_MARK, L'\n');
-			set_tail = false;
+			switch (pDoc->m_nPromptNewline) {
+			default:
+			case CSmcDoc::PromptNewlineAlways:
+				set_tail = copy_tail = false;
+				break;
+			case CSmcDoc::PromptNewlineNever:
+				set_tail = copy_tail = true;
+				break;
+			case CSmcDoc::PromptNewlineAuto:
+				// only if the next line is non-empty
+				if (str[0] == L'\n') {
+					strTail.SetAt(TailLen-1, L'\n');
+					set_tail = copy_tail = true;
+				} else {
+					set_tail = copy_tail = false;
+				}
+				break;
+			}
 		}
 	}
 
@@ -261,6 +278,7 @@ static void AddToOutList(const wchar_t* str, int wndCode)
     wchar_t OutputBuffer[BUFFER_SIZE+32];
     wchar_t* dest = OutputBuffer;
     int OutTextLen = 0;
+	bool add_prompt_mark = false;
 
     do {
         switch ( *src ) {
@@ -279,16 +297,25 @@ static void AddToOutList(const wchar_t* str, int wndCode)
 				} while (CSI_PARAM(*src) || CSI_INTERMIDIATE(*src));
 				*ansi = 0;
 			}
-			else
+			else if (src[1] == RMA_COMMAND)
 			{
-				while (*src && !(src[0] == ESC_SEQUENCE_MARK && src[1] == ESC_SEQUENCE_TERMINATOR))
-					src++;
+				src += 2;
+				for ( ; *src && !(src[0] == RMA_END); src++ )
+						;
+			}
+			else // C1?
+			{
+				src += 2;
 			}
             // Ansi skipped
             if ( *src ) 
                 break;
         case 0:
             // End of line - time to do all save operations 
+			if (add_prompt_mark) {
+				*dest++ = END_OF_PROMPT_MARK;
+				OutTextLen++;
+			}
             *dest = 0;
 			*ansi = 0;
             // Buffer filled , now parse ansi and save values
@@ -304,10 +331,15 @@ static void AddToOutList(const wchar_t* str, int wndCode)
                 *pCount = *pCount + 1;
             }
             break;
+		case END_OF_PROMPT_MARK:
+			// do not display prompt marks in the middle of the line
+			add_prompt_mark = true;
+			break;
         default:
             // Copy character to OutputBuffer and watch for m_nWindowCharsSize 
             *dest++ = *src;
             OutTextLen++;
+			add_prompt_mark = false;
             break;
         };
     } while (*src++ ) ;
@@ -532,6 +564,7 @@ CSmcDoc::CSmcDoc() : m_ParseDlg(AfxGetMainWnd() ), m_MudEmulator(AfxGetMainWnd()
 	m_bStickScrollbar = ::GetPrivateProfileInt(L"Options" , L"StickScrollbar" , 0, szGLOBAL_PROFILE);
 	m_bShowHiddenText = ::GetPrivateProfileInt(L"Options" , L"ShowHiddenText" , 1, szGLOBAL_PROFILE);
 	m_bExtAnsiColors = ::GetPrivateProfileInt(L"Options" , L"ExtAnsiColors" , 1, szGLOBAL_PROFILE);
+	m_nPromptNewline = (EPromptNewlineType)::GetPrivateProfileInt(L"Options" , L"PromptNewline" , 0, szGLOBAL_PROFILE);
 
     nScripterrorOutput  = ::GetPrivateProfileInt(L"Script" , L"ErrOutput", 0 , szGLOBAL_PROFILE);
 
@@ -604,6 +637,7 @@ CSmcDoc::~CSmcDoc()
 	::WritePrivateProfileInt(L"Options" , L"StickScrollbar" , m_bStickScrollbar , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"ShowHiddenText", m_bShowHiddenText , szGLOBAL_PROFILE);
 	::WritePrivateProfileInt(L"Options" , L"ExtAnsiColors" , m_bExtAnsiColors , szGLOBAL_PROFILE);
+	::WritePrivateProfileInt(L"Options" , L"PromptNewline" , m_nPromptNewline , szGLOBAL_PROFILE);
 
     ::WritePrivateProfileInt(L"Script" , L"ErrOutput", nScripterrorOutput , szGLOBAL_PROFILE);
 
@@ -897,7 +931,7 @@ void CSmcDoc::RecalcCharSize()
 
 void CSmcDoc::OnOptionsFont() 
 {
-	CFontDialog fd(&m_lfText,  CF_FIXEDPITCHONLY | CF_NOSCRIPTSEL | CF_SCREENFONTS , NULL , AfxGetMainWnd() );
+	CFontDialog fd(&m_lfText,  /*CF_FIXEDPITCHONLY |*/ CF_NOSCRIPTSEL | CF_SCREENFONTS , NULL , AfxGetMainWnd() );
 	if ( fd.DoModal() == IDOK ) {
 		m_fntText.DeleteObject();
 		m_fntText.CreateFontIndirect(&m_lfText);

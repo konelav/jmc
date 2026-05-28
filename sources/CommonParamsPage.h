@@ -44,6 +44,7 @@ public:
 	BOOL	m_bMinimizeToTray;
 	int		m_nTrigDelay;
 	CComboBox m_cCodePage;
+	CComboBox m_cPromptNewline;
 	BOOL	m_bLineWrap;
 	BOOL	m_bShowTimestamps;
 	BOOL	m_bSelectRect;
@@ -57,6 +58,7 @@ public:
 
 	std::vector<int> m_vIndexToCPID;
 	int m_nMudCodePage;
+	int m_nPromptNewline;
 
 // Overrides
 	// ClassWizard generate virtual function overrides
@@ -71,6 +73,7 @@ protected:
 	//{{AFX_MSG(CCommonParamsPage)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeCodePage();
+	afx_msg void OnSelchangePromptNewline();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

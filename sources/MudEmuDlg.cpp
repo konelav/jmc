@@ -99,13 +99,6 @@ void CMudEmuDlg::OnStartStopLog()
 
 void CMudEmuDlg::OnSend() 
 {
-    if ( IsConnected() ) {
-        CString t;
-        t.LoadString(IDS_ERR_DISCONNECT);
-        MessageBox (t, ::AfxGetAppName(), MB_OK | MB_ICONSTOP);
-        return;
-    }
-
     UpdateData();
 
     if ( m_strText.GetLength () <= 0 ) {
@@ -125,13 +118,6 @@ void CMudEmuDlg::OnSend()
 
 void CMudEmuDlg::OnSendLine() 
 {
-    if ( IsConnected() ) {
-        CString t;
-        t.LoadString(IDS_ERR_DISCONNECT);
-        MessageBox (t, ::AfxGetAppName(), MB_OK | MB_ICONSTOP);
-        return;
-    }
-
     UpdateData();
 
     if ( m_strText.GetLength () <= 0 ) {
@@ -175,19 +161,6 @@ void CMudEmuDlg::OnTimer(UINT nIDEvent)
 {
 	ASSERT(nIDEvent == 1);
 
-    if ( IsConnected() ) {
-        ResetEvent(eventMudEmuTextArrives);
-        delete[] m_pBuff;
-        m_pBuff = NULL;
-        KillTimer(1);
-		m_StartStopButton.SetWindowText(L"Start");
-		m_SendButton.EnableWindow(TRUE);
-		m_SendLineButton.EnableWindow(TRUE);
-		m_HandleRMAButton.EnableWindow(TRUE);
-        EnableWindow(TRUE);
-    }
-    
-
     if ( WaitForSingleObject (eventMudEmuTextArrives, 0 ) == WAIT_TIMEOUT ) {
         // now fill buffer
 		int max_length = sizeof(strMudEmuText) - 1 - nMudEmuTextSize;
@@ -198,8 +171,10 @@ void CMudEmuDlg::OnTimer(UINT nIDEvent)
 			char *to_check = m_pBuff + m_nOffset;
 			for (;;) {
 				char *rma_cmd = strstr(to_check, "\x1bp:");
-				if ( rma_cmd == NULL )
+				if ( rma_cmd == NULL ) {
+					to_play = m_nBufSize - m_nOffset;
 					break;
+				}
 				to_play = rma_cmd - (m_pBuff + m_nOffset);
 				if ( to_play > max_length )
 					break;

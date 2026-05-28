@@ -22,10 +22,13 @@
 
 
 #define END_OF_PROMPT_MARK		L'\x01'
-#define USER_INPUT_MARK			L'\x01'
 #define TINTIN_OUTPUT_MARK		L'\x02'
+#define USER_INPUT_MARK			L'\x03'
 #define ESC_SEQUENCE_MARK		L'\x1B'
 #define ESC_SEQUENCE_TERMINATOR	L'\\'
+#define RMA_COMMAND				L'p'
+#define RMA_PAUSE				L':'
+#define RMA_END					L'm'
 #define CSI_START(ch)			((ch) == L'[')
 #define CSI_PARAM(ch)			(0x30 <= (ch) && (ch) <= 0x3F) 
 #define CSI_INTERMIDIATE(ch)	(0x20 <= (ch) && (ch) <= 0x2F)

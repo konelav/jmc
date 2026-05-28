@@ -77,6 +77,12 @@ public:
     int m_nOutputWindowCharsSize[MAX_OUTPUT];
 //vls-end//
 
+	enum EPromptNewlineType {
+		PromptNewlineAlways = 0,
+		PromptNewlineNever,
+		PromptNewlineAuto
+	};
+
 
     int m_nYsize, m_nCharX;
 	BOOL m_bRectangleSelection;
@@ -86,6 +92,7 @@ public:
 	BOOL m_bStickScrollbar;
 	BOOL m_bShowHiddenText;
 	BOOL m_bExtAnsiColors;
+	EPromptNewlineType m_nPromptNewline;
     void RecalcCharSize();
 
     // COLOR SUPPORT

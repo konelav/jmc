@@ -140,12 +140,16 @@ void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
 	if ( strCode[0] == ESC_SEQUENCE_MARK )
 		strCode++;
 
-	if ( !CSI_START(*strCode) )
+	if (*strCode == RMA_COMMAND)
 	{
-		for ( ; *strCode && !(strCode[0] == ESC_SEQUENCE_MARK && strCode[1] == ESC_SEQUENCE_TERMINATOR); strCode++ )
+		for ( ; *strCode && !(strCode[0] == RMA_END); strCode++ )
 			;
-		if (strCode[0] == ESC_SEQUENCE_MARK)
-			strCode += 2;
+	}
+	else if ( !CSI_START(*strCode) ) // C1?
+	{
+		strCode++;
+		if (*strCode)
+			strCode++;
 	}
 	else
 	{
@@ -854,12 +858,14 @@ static const wchar_t* SkipAnsi(const wchar_t* ptr)
 		for ( ; !CSI_END(*ptr); ptr++ )
 			;
 	}
-	else
+	else if (*ptr == RMA_COMMAND)
 	{
-		for ( ; *ptr && !(ptr[0] == ESC_SEQUENCE_MARK && ptr[1] == ESC_SEQUENCE_TERMINATOR); ptr++ )
+		for ( ; *ptr && !(ptr[0] == RMA_END); ptr++ )
 			;
-		if (ptr[0] == ESC_SEQUENCE_MARK)
-			ptr++;
+	}
+	else // C1?
+	{
+		ptr++;
 	}
 
 	if (*ptr)

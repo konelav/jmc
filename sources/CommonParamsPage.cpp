@@ -46,6 +46,7 @@ CCommonParamsPage::CCommonParamsPage() : CPropertyPage(CCommonParamsPage::IDD, I
 	m_bStickScrollbar = FALSE;
 	m_nUserInputHide = 1;
 	m_bExtAnsiColors = FALSE;
+	m_nPromptNewline = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -77,6 +78,7 @@ void CCommonParamsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_MINIMIZE_TO_TRAY, m_bMinimizeToTray);
 	DDX_Text(pDX, IDC_TRIG_DELAY, m_nTrigDelay);
 	DDX_Control(pDX, IDC_MUD_CODEPAGE, m_cCodePage);
+	DDX_Control(pDX, IDC_PROMPT_NEWLINE, m_cPromptNewline);
 	DDX_Check(pDX, IDC_CHK_LINEWRAP, m_bLineWrap);
 	DDX_Check(pDX, IDC_DISPLAY_TIMESTAMPS, m_bShowTimestamps);
 	DDX_Check(pDX, IDC_CHK_SELECTRECT, m_bSelectRect);
@@ -92,6 +94,7 @@ void CCommonParamsPage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCommonParamsPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CCommonParamsPage)
 	ON_CBN_SELCHANGE(IDC_MUD_CODEPAGE, OnSelchangeCodePage)
+	ON_CBN_SELCHANGE(IDC_PROMPT_NEWLINE, OnSelchangePromptNewline)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -112,6 +115,8 @@ BOOL CCommonParamsPage::OnInitDialog()
 			m_cCodePage.SetCurSel(ind);
 		m_vIndexToCPID.push_back(cpid);
 	}
+
+	m_cPromptNewline.SetCurSel(m_nPromptNewline);
     
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -126,3 +131,7 @@ void CCommonParamsPage::OnSelchangeCodePage()
 	m_nMudCodePage = m_vIndexToCPID[ind];
 }
 
+void CCommonParamsPage::OnSelchangePromptNewline() 
+{
+	m_nPromptNewline = m_cPromptNewline.GetCurSel();
+}

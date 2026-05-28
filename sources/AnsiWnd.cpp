@@ -532,12 +532,14 @@ static const wchar_t* SkipAnsi(const wchar_t* ptr)
 		for ( ; !CSI_END(*ptr); ptr++ )
 			;
 	}
-	else
+	else if (*ptr == RMA_COMMAND)
 	{
-		for ( ; *ptr && !(ptr[0] == ESC_SEQUENCE_MARK && ptr[1] == ESC_SEQUENCE_TERMINATOR); ptr++ )
+		for ( ; *ptr && !(ptr[0] == RMA_END); ptr++ )
 			;
-		if (ptr[0] == ESC_SEQUENCE_MARK)
-			ptr++;
+	}
+	else // C1?
+	{
+		ptr++;
 	}
 
 	if (*ptr)
