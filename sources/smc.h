@@ -23,6 +23,7 @@ BOOL WritePrivateProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue,L
 
 extern CString m_editStr;
 
+const wchar_t* SkipAnsi(const wchar_t* ptr);
 
 class CSmcApp : public CWinApp
 {

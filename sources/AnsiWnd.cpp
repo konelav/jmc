@@ -521,32 +521,6 @@ void CAnsiWnd::DrawWithANSI(CDC* pDC, CRect& rect, CString* str, int nStrPos)
     }
 }
 
-static const wchar_t* SkipAnsi(const wchar_t* ptr)
-{
-	if (*ptr == ESC_SEQUENCE_MARK)
-		ptr++;
-
-	if (CSI_START(*ptr))
-	{
-		ptr++;
-		for ( ; !CSI_END(*ptr); ptr++ )
-			;
-	}
-	else if (*ptr == RMA_COMMAND)
-	{
-		for ( ; *ptr && !(ptr[0] == RMA_END); ptr++ )
-			;
-	}
-	else // C1?
-	{
-		ptr++;
-	}
-
-	if (*ptr)
-		ptr++;
-    return ptr;
-}
-
 void CAnsiWnd::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint point)
 {
 	int col = point.x/pDoc->m_nCharX;

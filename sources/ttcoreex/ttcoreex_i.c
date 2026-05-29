@@ -5,7 +5,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Wed May 27 11:42:46 2026
+/* at Fri May 29 08:07:13 2026
  */
 /* Compiler settings for Q:\mud\jmc\sources\ttcoreex\ttcoreex.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext

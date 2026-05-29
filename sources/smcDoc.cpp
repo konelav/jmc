@@ -237,8 +237,11 @@ static void AddToOutList(const wchar_t* str, int wndCode)
 				break;
 			case CSmcDoc::PromptNewlineAuto:
 				// only if the next line is non-empty
-				if (str[0] == L'\n') {
+				const wchar_t *str_end = SkipAnsi(str);
+				if (str_end[0] == L'\n') {
 					strTail.SetAt(TailLen-1, L'\n');
+					set_tail = copy_tail = true;
+				} else if (str_end[0] == L'0') {
 					set_tail = copy_tail = true;
 				} else {
 					set_tail = copy_tail = false;

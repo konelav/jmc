@@ -526,3 +526,30 @@ BOOL CAboutDlg::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
+
+const wchar_t* SkipAnsi(const wchar_t* ptr)
+{
+	if (*ptr != ESC_SEQUENCE_MARK)
+		return ptr;
+
+	ptr++;
+
+	if (CSI_START(*ptr))
+	{
+		ptr++;
+		for ( ; !CSI_END(*ptr); ptr++ )
+			;
+	}
+	else if (*ptr == RMA_COMMAND)
+	{
+		for ( ; *ptr && !(ptr[0] == RMA_END); ptr++ )
+			;
+	}
+	else // C1?
+	{
+	}
+
+	if (*ptr)
+		ptr++;
+    return ptr;
+}
