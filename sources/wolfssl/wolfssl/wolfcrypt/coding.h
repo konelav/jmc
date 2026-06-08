@@ -1,12 +1,12 @@
 /* coding.h
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
-
+/*!
+    \file wolfssl/wolfcrypt/coding.h
+*/
 
 #ifndef WOLF_CRYPT_CODING_H
 #define WOLF_CRYPT_CODING_H
@@ -30,8 +32,15 @@
     extern "C" {
 #endif
 
+#ifdef WOLFSSL_API_PREFIX_MAP
+    #define Base64_Decode wc_Base64_Decode
+    #define Base64_Decode_nonCT wc_Base64_Decode_nonCT
+#endif
 
 WOLFSSL_API int Base64_Decode(const byte* in, word32 inLen, byte* out,
+                               word32* outLen);
+
+WOLFSSL_API int Base64_Decode_nonCT(const byte* in, word32 inLen, byte* out,
                                word32* outLen);
 
 #if defined(OPENSSL_EXTRA) || defined(SESSION_CERTS) || defined(WOLFSSL_KEY_GEN) \
@@ -49,6 +58,12 @@ WOLFSSL_API int Base64_Decode(const byte* in, word32 inLen, byte* out,
         WC_NO_NL_ENC          /* no encoding at all             */
     }; /* Encoding types */
 
+    #ifdef WOLFSSL_API_PREFIX_MAP
+        #define Base64_Encode wc_Base64_Encode
+        #define Base64_EncodeEsc wc_Base64_EncodeEsc
+        #define Base64_Encode_NoNl wc_Base64_Encode_NoNl
+    #endif
+
     /* encode isn't */
     WOLFSSL_API
     int Base64_Encode(const byte* in, word32 inLen, byte* out,
@@ -61,13 +76,19 @@ WOLFSSL_API int Base64_Decode(const byte* in, word32 inLen, byte* out,
                                   word32* outLen);
 #endif
 
-#if defined(OPENSSL_EXTRA) || defined(HAVE_WEBSERVER) || defined(HAVE_FIPS)
+#ifdef WOLFSSL_BASE16
+    #ifdef WOLFSSL_API_PREFIX_MAP
+        #define Base16_Decode wc_Base16_Decode
+        #define Base16_Encode wc_Base16_Encode
+    #endif
     WOLFSSL_API
     int Base16_Decode(const byte* in, word32 inLen, byte* out, word32* outLen);
     WOLFSSL_API
     int Base16_Encode(const byte* in, word32 inLen, byte* out, word32* outLen);
 #endif
 
+WOLFSSL_LOCAL int Base64_SkipNewline(const byte* in, word32* inLen,
+            word32* outJ);
 
 #ifdef __cplusplus
     } /* extern "C" */

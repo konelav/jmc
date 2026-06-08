@@ -13,6 +13,8 @@
 #define SOCKPROMPT   		02000   /* last prompt was definitely a prompt */
 #define SOCKCOMPRESSING		04000	/* zlib compression (MCCP) is ON */
 #define SOCKNAWS		   010000	/* negotiations about window size enabled */
+#define SOCKWEBSOCKET	   020000   /* telnet running on top of websocket stream */
+#define SOCKWSCOMPRESS	   040000   /* permessage-deflate for websocket enabled */
 
 #define TN_BINARY       0000    /* binary option */
 #define TN_ECHO         0001    /* echo option */
@@ -96,6 +98,17 @@ typedef struct
 	const wchar_t *Name;
 	const wchar_t *Descr;
 } TelnetOption;
+
+#define WEBSOCKET_VERSION	13
+
+#define WS_OPCODE_CONT		0
+#define WS_OPCODE_TEXT		1
+#define WS_OPCODE_BINARY	2
+#define WS_OPCODE_CLOSE		8
+#define WS_OPCODE_PING		9
+#define WS_OPCODE_PONG		10
+
+#define WS_COMPRESS_EXT		L"permessage-deflate"
 
 #define ZLIB_DLL
 #include "zlib.h"

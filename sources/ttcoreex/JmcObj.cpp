@@ -190,6 +190,9 @@ STDMETHODIMP CJmcObj::RegisterHandler(BSTR bstrEvent, BSTR bstrCode)
 	if ( *event == L'G' && !wcsicmp(event, L"GUIACTION" ) ){
         m_bstrEventsHandlers[ID_GuiAction] = bstrCode;
     } else 
+	if ( *event == L'W' && !wcsicmp(event, L"WEBSOCKET" ) ){
+        m_bstrEventsHandlers[ID_Websocket] = bstrCode;
+    } else 
         return E_INVALIDARG;
     return S_OK;
 }
@@ -438,6 +441,24 @@ STDMETHODIMP CJmcObj::DoTelnet(LONG Command, LONG Option, BSTR bstrData)
 		return E_INVALIDARG;
 	else
 		send_telnet_subnegotiation((unsigned char)Option, bstrData, SysStringLen(bstrData), false);
+
+	return S_OK;
+}
+
+STDMETHODIMP CJmcObj::DoWebsocket(LONG Opcode, BSTR bstrData)
+{
+	if (!SysStringLen(bstrData))
+		send_websocket_frame(Opcode, NULL, 0);
+	else {
+		char *coded;
+		int length = SysStringLen(bstrData);
+		coded = new char[length];
+		for (int i = 0; i < length; i++) {
+			coded[i] = (unsigned char)bstrData[i];
+		}
+		send_websocket_frame(Opcode, coded, length);
+		delete[] coded;
+	}
 
 	return S_OK;
 }

@@ -1,12 +1,12 @@
 /* fp_sqr_comba_small_set.i
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -22,12 +22,24 @@
 
 
 #if defined(TFM_SMALL_SET)
-void fp_sqr_comba_small(fp_int *A, fp_int *B)
+int fp_sqr_comba_small(fp_int *A, fp_int *B)
 {
-   fp_digit *a, b[32], c0, c1, c2, sc0, sc1, sc2;
+   fp_digit *a, c0, c1, c2, sc0 = 0, sc1 = 0, sc2 = 0;
 #ifdef TFM_ISO
-   fp_word   tt;   
-#endif   
+   fp_word tt;
+#endif
+#ifndef WOLFSSL_SMALL_STACK
+   fp_digit b[32];
+#else
+   fp_digit *b;
+#endif
+
+#ifdef WOLFSSL_SMALL_STACK
+   b = (fp_digit*)XMALLOC(sizeof(fp_digit) * 32, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+   if (b == NULL)
+      return FP_MEM;
+#endif
+
    switch (A->used) { 
    case 1:
       a = A->dp;
@@ -44,7 +56,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 2;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 2 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 2 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -73,7 +85,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 4;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 4 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 4 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -112,7 +124,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 6;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 6 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 6 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -161,7 +173,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 8;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 8 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 8 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -220,7 +232,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 10;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 10 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 10 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -289,7 +301,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 12;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 12 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 12 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -368,7 +380,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 14;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 14 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 14 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -457,7 +469,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 16;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 16 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 16 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -556,7 +568,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 18;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 18 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 18 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -665,7 +677,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 20;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 20 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 20 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -784,7 +796,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 22;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 22 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 22 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -913,7 +925,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 24;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 24 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 24 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -1052,7 +1064,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 26;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 26 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 26 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -1201,7 +1213,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 28;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 28 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 28 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -1360,7 +1372,7 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 30;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 30 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 30 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
@@ -1529,13 +1541,18 @@ void fp_sqr_comba_small(fp_int *A, fp_int *B)
 
       B->used = 32;
       B->sign = FP_ZPOS;
-      memcpy(B->dp, b, 32 * sizeof(fp_digit));
+      XMEMCPY(B->dp, b, 32 * sizeof(fp_digit));
       fp_clamp(B);
       break;
 
    default:
       break;
-}
+   }
+
+#ifdef WOLFSSL_SMALL_STACK
+   XFREE(b, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+#endif
+   return FP_OKAY;
 }
 
 #endif /* TFM_SMALL_SET */

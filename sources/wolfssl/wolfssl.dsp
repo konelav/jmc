@@ -42,8 +42,8 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /w /W0 /GX /O2 /I ".\\" /D "WOLFSSL_LIB" /D "BUILDING_WOLFSSL" /D "WOLFSSL_DLL" /D "WOLFSSL_USER_SETTINGS" /D "CYASSL_USER_SETTINGS" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /D "HAVE_MEMMOVE" /YX /FD /c
+# ADD BASE CPP /nologo /MT /W3 /Gm /GX /Zi /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /Gm /GX /Zi /O2 /I ".\\"  /D "UNICODE" /D "_UNICODE" /D "WOLFSSL_LIB" /D "BUILDING_WOLFSSL" /D "WOLFSSL_DLL" /D "WOLFSSL_USER_SETTINGS" /D "CYASSL_USER_SETTINGS" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /D "HAVE_MEMMOVE" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I ".\\" /D "UNICODE" /D "_UNICODE" /D "WOLFSSL_LIB" /D "BUILDING_WOLFSSL" /D "WOLFSSL_DLL" /D "WOLFSSL_USER_SETTINGS" /D "CYASSL_USER_SETTINGS" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /D "HAVE_MEMOVE" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I ".\\" /D "UNICODE" /D "_UNICODE" /D "WOLFSSL_LIB" /D "BUILDING_WOLFSSL" /D "WOLFSSL_DLL" /D "WOLFSSL_USER_SETTINGS" /D "CYASSL_USER_SETTINGS" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WOLFSSL_EXPORTS" /D "HAVE_MEMMOVE" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -92,6 +92,70 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\src\crl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\dtls.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\dtls13.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\internal.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\keys.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ocsp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\pk.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\pk_ec.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\pk_rsa.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\quic.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\sniffer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ssl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\tls.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\tls13.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\wolfio.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\x509.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\aes.c
 # End Source File
 # Begin Source File
@@ -100,11 +164,31 @@ SOURCE=.\wolfcrypt\src\arc4.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\ascon.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\asm.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\asn.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\asn_orig.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\async.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\blake2b.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\blake2s.c
 # End Source File
 # Begin Source File
 
@@ -120,11 +204,31 @@ SOURCE=.\wolfcrypt\src\chacha20_poly1305.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\cmac.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\coding.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\crl.c
+SOURCE=.\wolfcrypt\src\compress.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\cpuid.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\cryptocb.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\curve25519.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\curve448.c
 # End Source File
 # Begin Source File
 
@@ -136,6 +240,10 @@ SOURCE=.\wolfcrypt\src\dh.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\dilithium.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\dsa.c
 # End Source File
 # Begin Source File
@@ -144,7 +252,63 @@ SOURCE=.\wolfcrypt\src\ecc.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\ecc_fp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\eccsi.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ed25519.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ed448.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\error.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ext_lms.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ext_mlkem.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ext_xmss.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\falcon.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\fe_448.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\fe_low_mem.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\fe_operations.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ge_448.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ge_low_mem.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\ge_operations.c
 # End Source File
 # Begin Source File
 
@@ -152,11 +316,11 @@ SOURCE=.\wolfcrypt\src\hash.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wolfcrypt\src\hc128.c
+SOURCE=.\wolfcrypt\src\hmac.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wolfcrypt\src\hmac.c
+SOURCE=.\wolfcrypt\src\hpke.c
 # End Source File
 # Begin Source File
 
@@ -164,19 +328,15 @@ SOURCE=.\wolfcrypt\src\integer.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\internal.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\io.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\keys.c
+SOURCE=.\wolfcrypt\src\kdf.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\wolfcrypt\src\logging.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\md2.c
 # End Source File
 # Begin Source File
 
@@ -192,7 +352,7 @@ SOURCE=.\wolfcrypt\src\memory.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\ocsp.c
+SOURCE=.\wolfcrypt\src\pkcs12.c
 # End Source File
 # Begin Source File
 
@@ -208,11 +368,11 @@ SOURCE=.\wolfcrypt\src\pwdbased.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wolfcrypt\src\rabbit.c
+SOURCE=.\wolfcrypt\src\random.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wolfcrypt\src\random.c
+SOURCE=.\wolfcrypt\src\rc2.c
 # End Source File
 # Begin Source File
 
@@ -220,7 +380,15 @@ SOURCE=.\wolfcrypt\src\ripemd.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\rng_bank.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\rsa.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sakke.c
 # End Source File
 # Begin Source File
 
@@ -232,6 +400,10 @@ SOURCE=.\wolfcrypt\src\sha256.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\sha3.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\sha512.c
 # End Source File
 # Begin Source File
@@ -240,11 +412,63 @@ SOURCE=.\wolfcrypt\src\signature.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\ssl.c
+SOURCE=.\wolfcrypt\src\siphash.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\tls.c
+SOURCE=.\wolfcrypt\src\sm2.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sm3.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sm4.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_c32.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_c64.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_int.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_sm2_c32.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_sm2_c64.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_sm2_x86_64.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sp_x86_64.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\sphincs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\srp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\tfm.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_dsp.c
 # End Source File
 # Begin Source File
 
@@ -252,7 +476,51 @@ SOURCE=.\wolfcrypt\src\wc_encrypt.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wolfcrypt\src\wc_lms.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_lms_impl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_mlkem.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_mlkem_poly.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_pkcs11.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wolfcrypt\src\wc_port.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_slhdsa.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_xmss.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wc_xmss_impl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wolfentropy.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wolfevent.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wolfcrypt\src\wolfmath.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

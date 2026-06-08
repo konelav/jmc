@@ -1,12 +1,12 @@
 /* ripemd.h
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -19,6 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
+/*!
+    \file wolfssl/wolfcrypt/ripemd.h
+*/
 
 #ifndef WOLF_CRYPT_RIPEMD_H
 #define WOLF_CRYPT_RIPEMD_H
@@ -51,9 +54,9 @@ typedef struct RipeMd {
 } RipeMd;
 
 
-WOLFSSL_API void wc_InitRipeMd(RipeMd*);
-WOLFSSL_API void wc_RipeMdUpdate(RipeMd*, const byte*, word32);
-WOLFSSL_API void wc_RipeMdFinal(RipeMd*, byte*);
+WOLFSSL_API int wc_InitRipeMd(RipeMd* ripemd);
+WOLFSSL_API int wc_RipeMdUpdate(RipeMd* ripemd, const byte* data, word32 len);
+WOLFSSL_API int wc_RipeMdFinal(RipeMd* ripemd, byte* hash);
 
 
 #ifdef __cplusplus

@@ -1,12 +1,12 @@
 /* mpi_class.h
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -62,6 +62,7 @@
 #define BN_MP_DR_SETUP_C
 #define BN_MP_EXCH_C
 #define BN_MP_EXPT_D_C
+#define BN_MP_EXPTMOD_BASE_2
 #define BN_MP_EXPTMOD_C
 #define BN_MP_EXPTMOD_FAST_C
 #define BN_MP_EXTEUCLID_C
@@ -358,6 +359,7 @@
    #define BN_MP_REDUCE_IS_2K_C
    #define BN_MP_ISODD_C
    #define BN_MP_EXPTMOD_FAST_C
+   #define BN_MP_EXPTMOD_BASE_2
 #endif
 
 #if defined(BN_MP_EXPTMOD_FAST_C)

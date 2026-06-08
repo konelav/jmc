@@ -611,7 +611,7 @@ wchar_t *get_arg_in_braces(wchar_t *s, wchar_t *arg, int flag, int maxlength)
 /**********************************************/
 wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 {
-  int inside=FALSE;
+  int inside1=FALSE, inside2=FALSE;
   s=space_out(s);
   
   while(*s && maxlength > 0) {
@@ -621,9 +621,13 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 			maxlength--;
 		}
     }
-    else if(*s==L'"') {
+    else if(*s==L'"' && !inside1) {
       s++;
-      inside=!inside;
+      inside2=!inside2;
+    }
+	else if(*s==L'\'' && !inside2) {
+      s++;
+      inside1=!inside1;
     }
 
     // else if(*s==L';') {
@@ -641,7 +645,7 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 		      ( bColon && *s==L';'              )) 
 			  &&
 			  (*(s-1) != L'\\')) {
-		if(inside) {
+		if(inside1 || inside2) {
 			*arg++=*s++;
 			maxlength--;
 		}
@@ -649,7 +653,7 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 		break;
     }
 
-    else if(!inside && *s==L' ')
+    else if(!inside1 && !inside2 && *s==L' ')
       break;
     else {
       *arg++=*s++;

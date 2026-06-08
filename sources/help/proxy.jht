@@ -2,7 +2,7 @@
   show current proxy settings
 #proxy disable
   disable proxy (reconnection needed)
-#proxy {socks4|socks5} {ip}[:{port}] [username] [password]
+#proxy {socks4|socks5|http} {ip}[:{port}] [username] [password]
   set proxy to ip:port (default port is 1080)
   authorization use given username and password
   reconnection needed

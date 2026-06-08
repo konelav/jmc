@@ -1,12 +1,12 @@
 /* md5.h
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
+/*!
+    \file wolfssl/wolfcrypt/md5.h
+*/
+
 
 #ifndef WOLF_CRYPT_MD5_H
 #define WOLF_CRYPT_MD5_H
@@ -27,7 +31,12 @@
 
 #ifndef NO_MD5
 
-#ifdef HAVE_FIPS
+#ifdef WOLFSSL_API_PREFIX_MAP
+    #define InitMd5   wc_InitMd5
+    #define Md5Update wc_Md5Update
+    #define Md5Final  wc_Md5Final
+    #define Md5Hash   wc_Md5Hash
+#elif defined(HAVE_FIPS)
     #define wc_InitMd5   InitMd5
     #define wc_Md5Update Md5Update
     #define wc_Md5Final  Md5Final
@@ -38,45 +47,89 @@
     extern "C" {
 #endif
 
+#ifndef NO_OLD_MD5_NAME
+    #define MD5             WC_MD5
+#endif
+
+#ifndef NO_OLD_WC_NAMES
+    #define Md5             wc_Md5
+    #define MD5_BLOCK_SIZE  WC_MD5_BLOCK_SIZE
+    #define MD5_DIGEST_SIZE WC_MD5_DIGEST_SIZE
+    #define MD5_PAD_SIZE    WC_MD5_PAD_SIZE
+#endif
+
 /* in bytes */
-enum {
-#ifdef STM32F2_HASH
-    MD5_REG_SIZE    =  4,      /* STM32 register size, bytes */
-#endif
-    MD5             =  0,      /* hash type unique */
-    MD5_BLOCK_SIZE  = 64,
-    MD5_DIGEST_SIZE = 16,
-    MD5_PAD_SIZE    = 56
-};
+#define WC_MD5             WC_HASH_TYPE_MD5
+#define WC_MD5_BLOCK_SIZE  64
+#define WC_MD5_DIGEST_SIZE 16
+#define WC_MD5_PAD_SIZE    56
 
-#if defined(WOLFSSL_PIC32MZ_HASH)
-#include "port/pic32/pic32mz-crypt.h"
+
+#ifdef WOLFSSL_MICROCHIP_PIC32MZ
+    #include <wolfssl/wolfcrypt/port/pic32/pic32mz-crypt.h>
+#endif
+#if defined(STM32_HASH) && !defined(STM32_NOMD5)
+    #include <wolfssl/wolfcrypt/port/st/stm32.h>
+#endif
+#ifdef WOLFSSL_ASYNC_CRYPT
+    #include <wolfssl/wolfcrypt/async.h>
 #endif
 
-#ifndef WOLFSSL_TI_HASH
+#ifdef WOLFSSL_TI_HASH
+    #include "wolfssl/wolfcrypt/port/ti/ti-hash.h"
+#elif defined(WOLFSSL_IMX6_CAAM) && !defined(WOLFSSL_QNX_CAAM)
+    #include "wolfssl/wolfcrypt/port/caam/wolfcaam_sha.h"
+#else
 
 /* MD5 digest */
-typedef struct Md5 {
+typedef struct wc_Md5 {
+#if defined(STM32_HASH) && !defined(STM32_NOMD5)
+    STM32_HASH_Context stmCtx;
+#else
     word32  buffLen;   /* in bytes          */
     word32  loLen;     /* length in bytes   */
     word32  hiLen;     /* length in bytes   */
-    word32  buffer[MD5_BLOCK_SIZE  / sizeof(word32)];
-    #if !defined(WOLFSSL_PIC32MZ_HASH)
-    word32  digest[MD5_DIGEST_SIZE / sizeof(word32)];
-    #else
-    word32  digest[PIC32_HASH_SIZE / sizeof(word32)];
-    pic32mz_desc desc ; /* Crypt Engine descriptor */
-    #endif
-} Md5;
+    word32  buffer[WC_MD5_BLOCK_SIZE  / sizeof(word32)];
+#ifdef WOLFSSL_PIC32MZ_HASH
+    word32  digest[PIC32_DIGEST_SIZE / sizeof(word32)];
+#else
+    word32  digest[WC_MD5_DIGEST_SIZE / sizeof(word32)];
+#endif
+    void*   heap;
+#ifdef WOLFSSL_PIC32MZ_HASH
+    hashUpdCache cache; /* cache for updates */
+#endif
+#endif /* STM32_HASH */
+#ifdef WOLFSSL_ASYNC_CRYPT
+    WC_ASYNC_DEV asyncDev;
+#endif /* WOLFSSL_ASYNC_CRYPT */
+#ifdef WOLFSSL_HASH_FLAGS
+    word32 flags; /* enum wc_HashFlags in hash.h */
+#endif
+} wc_Md5;
 
-#else /* WOLFSSL_TI_HASH */
-    #include "wolfssl/wolfcrypt/port/ti/ti-hash.h"
+#endif /* WOLFSSL_TI_HASH */
+
+WOLFSSL_API int wc_InitMd5(wc_Md5* md5);
+WOLFSSL_API int wc_InitMd5_ex(wc_Md5* md5, void* heap, int devId);
+WOLFSSL_API int wc_Md5Update(wc_Md5* md5, const byte* data, word32 len);
+WOLFSSL_API int wc_Md5Final(wc_Md5* md5, byte* hash);
+WOLFSSL_API void wc_Md5Free(wc_Md5* md5);
+#if defined(OPENSSL_EXTRA) || defined(HAVE_CURL)
+WOLFSSL_API int wc_Md5Transform(wc_Md5* md5, const byte* data);
 #endif
 
-WOLFSSL_API void wc_InitMd5(Md5*);
-WOLFSSL_API void wc_Md5Update(Md5*, const byte*, word32);
-WOLFSSL_API void wc_Md5Final(Md5*, byte*);
-WOLFSSL_API int  wc_Md5Hash(const byte*, word32, byte*);
+WOLFSSL_API int  wc_Md5GetHash(wc_Md5* md5, byte* hash);
+WOLFSSL_API int  wc_Md5Copy(wc_Md5* src, wc_Md5* dst);
+
+#ifdef WOLFSSL_PIC32MZ_HASH
+WOLFSSL_API void wc_Md5SizeSet(wc_Md5* md5, word32 len);
+#endif
+
+#ifdef WOLFSSL_HASH_FLAGS
+    WOLFSSL_API int wc_Md5SetFlags(wc_Md5* md5, word32 flags);
+    WOLFSSL_API int wc_Md5GetFlags(wc_Md5* md5, word32* flags);
+#endif
 
 #ifdef __cplusplus
     } /* extern "C" */

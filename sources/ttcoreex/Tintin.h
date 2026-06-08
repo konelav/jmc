@@ -170,7 +170,11 @@ extern BOOL bLogPassedLine;
 //vls-end//
 
 extern std::vector<unsigned int> vEnabledTelnetOptions;
+extern std::map<wstring,wstring> mWebsocketOptions;
 extern BOOL DLLEXPORT bTelnetDebugEnabled;
+extern BOOL DLLEXPORT bWebsocketDebugEnabled;
+extern BOOL DLLEXPORT bSecureDebugEnabled;
+extern BOOL DLLEXPORT bWebsocketEnabled;
 
 //* en
 extern BOOL bContinuedAction; //next
@@ -241,7 +245,8 @@ typedef enum {
 	TLS_SSL3,
 	TLS_TLS1,
 	TLS_TLS1_1,
-	TLS_TLS1_2
+	TLS_TLS1_2,
+	TLS_TLS1_3
 } TLSType;
 extern TLSType DLLEXPORT lTLSType;
 extern wstring DLLEXPORT strCAFile;
@@ -471,6 +476,8 @@ void bar_command(wchar_t *arg);
 
 void sync_command(wchar_t *arg);
 
+int base64_encode(char *dst, int capacity, const char *src, int size);
+
 //Proxy support
 void proxy_command(wchar_t *arg);
 int proxy_connect(int, const struct sockaddr *, int);
@@ -489,7 +496,10 @@ int get_telnet_option_num(const wchar_t *name);
 void get_telnet_option_name(unsigned int num, wchar_t *buf);
 void send_telnet_command(unsigned char command, int option = -1);
 void send_telnet_subnegotiation(unsigned char option, const wchar_t *output, int length, bool raw_bytes);
+int send_websocket_frame(int opcode, const char *data, unsigned int count);
+int send_websocket_ping(int timeout_ms);
 void telnet_command(wchar_t *arg);
+void websocket_command(wchar_t *arg);
 void promptend_command(wchar_t *arg);
 
 //Out-of-band (GMCP/MSDP) support
@@ -550,12 +560,15 @@ BOOL show_actions(wchar_t* left = NULL, CGROUP* pGroup = NULL);
 int do_one_antisub(wchar_t *line);
 extern unsigned int SocketFlags;
 extern unsigned char State;
+int telnet_init_session(int sock);
+void telnet_close_session();
 void free_telnet_buffer();
 void telnet_push_back(const char *src, int size);
 int telnet_more_coming();
 int telnet_pop_front(wchar_t *dst, int maxsize);
 void reset_telnet_protocol();
 void do_telnet_protecol(const char* input, int length, int *used, char* output, int capacity, int *generated);
+int telnet_send_command(const char* output, int size);
 //vls-begin// multiple output
 void StopLogging();
 void log(wstring st);
@@ -626,7 +639,7 @@ extern void* JMCObjRet[1000];
 // --END
 
 //* en:JMC functions struct. look cmds.h
-const int JMC_CMDS_NUM=134;
+const int JMC_CMDS_NUM=135;
 typedef struct jmc_cmd 
 	{
 	wchar_t*alias;

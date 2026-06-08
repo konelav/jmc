@@ -7,7 +7,8 @@
 
 enum proxy_version {
 	PROXY_SOCKS4 = 4,
-	PROXY_SOCKS5 = 5
+	PROXY_SOCKS5 = 5,
+	PROXY_HTTP
 };
 
 

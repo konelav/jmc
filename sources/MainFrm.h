@@ -79,6 +79,8 @@ class CJMCStatus : public CStatusBar
 {
 protected:
     CBitmap m_bmpConnected, m_bmpLogged, m_bmpMarked;
+	CString m_StatusSet[MAX_STATUS_NUM];
+	CString m_StatusDrawn[MAX_STATUS_NUM];
 
 protected:
 	int m_nYsize;
@@ -90,6 +92,9 @@ public:
 	void SetFontHeight(int h) {m_nYsize = h;};
     virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
 	virtual CSize CalcFixedLayout(BOOL bStretch, BOOL bHorz);
+
+	bool SetStatus(int StatusNum, const CString &Value);
+	void ResetContents();
 
 protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
@@ -113,8 +118,6 @@ protected: // create from serialization only
 	CMainFrame();
 	DECLARE_DYNCREATE(CMainFrame)
 
-    CString m_strInfo1, m_strInfo2, m_strInfo3, m_strInfo4, m_strInfo5;
-
 // Attributes
 public:
     CEditBar m_editBar;
@@ -124,6 +127,8 @@ public:
     COutputBar m_coolBar[MAX_OUTPUT];
 	DWORD m_Docks[MAX_OUTPUT];
 //vls-end//
+	int m_infoCount;
+	void UpdateInfoParams();
 
     virtual void OnUpdateFrameTitle(BOOL);
     
@@ -172,11 +177,7 @@ protected:
     afx_msg void OnUpdateTicker(CCmdUI* pUI);
     afx_msg BOOL OnBarCheckEx(UINT nID);
 
-    afx_msg void OnUpdateInfo1(CCmdUI* pUI);
-    afx_msg void OnUpdateInfo2(CCmdUI* pUI);
-    afx_msg void OnUpdateInfo3(CCmdUI* pUI);
-    afx_msg void OnUpdateInfo4(CCmdUI* pUI);
-    afx_msg void OnUpdateInfo5(CCmdUI* pUI);
+    afx_msg void OnUpdateInfo(CCmdUI* pUI);
     
     afx_msg LONG OnTabAdded( UINT wParam, LONG lParam);
     afx_msg LONG OnTabDeleted( UINT wParam, LONG lParam);
@@ -204,11 +205,8 @@ protected:
 
     afx_msg LONG OnCleanInput(UINT wParam, LONG lParam);
 
-	afx_msg LONG OnUpdStat1(UINT wParam, LONG lParam);
-	afx_msg LONG OnUpdStat2(UINT wParam, LONG lParam);
-	afx_msg LONG OnUpdStat3(UINT wParam, LONG lParam);
-	afx_msg LONG OnUpdStat4(UINT wParam, LONG lParam);
-	afx_msg LONG OnUpdStat5(UINT wParam, LONG lParam);
+	afx_msg LONG OnUpdStat(UINT wParam, LONG lParam);
+	afx_msg LONG OnUpdStatLayout(UINT wParam, LONG lParam);
 
 	afx_msg LONG OnUpdPing(UINT wParam, LONG lParam);
 

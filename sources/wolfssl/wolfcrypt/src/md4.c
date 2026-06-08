@@ -1,12 +1,12 @@
 /* md4.c
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -19,12 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
-
-#ifdef HAVE_CONFIG_H
-    #include <config.h>
-#endif
-
-#include <wolfssl/wolfcrypt/settings.h>
+#include <wolfssl/wolfcrypt/libwolfssl_sources.h>
 
 #ifndef NO_MD4
 
@@ -32,23 +27,16 @@
 #ifdef NO_INLINE
     #include <wolfssl/wolfcrypt/misc.h>
 #else
+    #define WOLFSSL_MISC_INCLUDED
     #include <wolfcrypt/src/misc.c>
 #endif
 
 
-#ifndef WOLFSSL_HAVE_MIN
-#define WOLFSSL_HAVE_MIN
-
-    static INLINE word32 min(word32 a, word32 b)
-    {
-        return a > b ? b : a;
-    }
-
-#endif /* WOLFSSL_HAVE_MIN */
-
-
-void wc_InitMd4(Md4* md4)
+void wc_InitMd4(wc_Md4* md4)
 {
+    if (md4 == NULL)
+        return;
+
     md4->digest[0] = 0x67452301L;
     md4->digest[1] = 0xefcdab89L;
     md4->digest[2] = 0x98badcfeL;
@@ -60,7 +48,7 @@ void wc_InitMd4(Md4* md4)
 }
 
 
-static void Transform(Md4* md4)
+static void Transform(wc_Md4* md4)
 {
 #define F(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
 #define G(x, y, z) (((x) & (y)) | ((x) & (z)) | ((y) & (z)))
@@ -72,7 +60,7 @@ static void Transform(Md4* md4)
     word32 C = md4->digest[2];
     word32 D = md4->digest[3];
 
-#define function(a,b,c,d,k,s) a=rotlFixed(a+F(b,c,d)+md4->buffer[k],s);
+#define function(a,b,c,d,k,s) (a)=rotlFixed((a)+F(b,c,d)+md4->buffer[k],s);
     function(A,B,C,D, 0, 3);
     function(D,A,B,C, 1, 7);
     function(C,D,A,B, 2,11);
@@ -90,9 +78,9 @@ static void Transform(Md4* md4)
     function(C,D,A,B,14,11);
     function(B,C,D,A,15,19);
 
-#undef function	  
+#undef function
 #define function(a,b,c,d,k,s) \
-    a=rotlFixed(a+G(b,c,d)+md4->buffer[k]+0x5a827999,s);
+    (a)=rotlFixed((a)+G(b,c,d)+md4->buffer[k]+0x5a827999,s);
 
     function(A,B,C,D, 0, 3);
     function(D,A,B,C, 4, 5);
@@ -111,9 +99,9 @@ static void Transform(Md4* md4)
     function(C,D,A,B,11, 9);
     function(B,C,D,A,15,13);
 
-#undef function	 
+#undef function
 #define function(a,b,c,d,k,s) \
-    a=rotlFixed(a+H(b,c,d)+md4->buffer[k]+0x6ed9eba1,s);
+    (a)=rotlFixed((a)+H(b,c,d)+md4->buffer[k]+0x6ed9eba1,s);
 
     function(A,B,C,D, 0, 3);
     function(D,A,B,C, 8, 9);
@@ -131,7 +119,7 @@ static void Transform(Md4* md4)
     function(D,A,B,C,11, 9);
     function(C,D,A,B, 7,11);
     function(B,C,D,A,15,15);
-    
+
     /* Add the working vars back into digest state[]  */
     md4->digest[0] += A;
     md4->digest[1] += B;
@@ -140,7 +128,7 @@ static void Transform(Md4* md4)
 }
 
 
-static INLINE void AddLength(Md4* md4, word32 len)
+static WC_INLINE void AddLength(wc_Md4* md4, word32 len)
 {
     word32 tmp = md4->loLen;
     if ( (md4->loLen += len) < tmp)
@@ -148,70 +136,78 @@ static INLINE void AddLength(Md4* md4, word32 len)
 }
 
 
-void wc_Md4Update(Md4* md4, const byte* data, word32 len)
+void wc_Md4Update(wc_Md4* md4, const byte* data, word32 len)
 {
     /* do block size increments */
-    byte* local = (byte*)md4->buffer;
+    byte* local;
 
+    if (md4 == NULL || (data == NULL && len != 0))
+        return;
+
+    local = (byte*)md4->buffer;
     while (len) {
-        word32 add = min(len, MD4_BLOCK_SIZE - md4->buffLen);
+        word32 add = min(len, WC_MD4_BLOCK_SIZE - md4->buffLen);
         XMEMCPY(&local[md4->buffLen], data, add);
 
         md4->buffLen += add;
         data         += add;
         len          -= add;
 
-        if (md4->buffLen == MD4_BLOCK_SIZE) {
+        if (md4->buffLen == WC_MD4_BLOCK_SIZE) {
             #ifdef BIG_ENDIAN_ORDER
-                ByteReverseWords(md4->buffer, md4->buffer, MD4_BLOCK_SIZE);
+                ByteReverseWords(md4->buffer, md4->buffer, WC_MD4_BLOCK_SIZE);
             #endif
             Transform(md4);
-            AddLength(md4, MD4_BLOCK_SIZE);
+            AddLength(md4, WC_MD4_BLOCK_SIZE);
             md4->buffLen = 0;
         }
     }
 }
 
 
-void wc_Md4Final(Md4* md4, byte* hash)
+void wc_Md4Final(wc_Md4* md4, byte* hash)
 {
-    byte* local = (byte*)md4->buffer;
+    byte* local;
 
+    if (md4 == NULL || hash == NULL)
+        return;
+
+    local = (byte*)md4->buffer;
     AddLength(md4, md4->buffLen);               /* before adding pads */
 
     local[md4->buffLen++] = 0x80;  /* add 1 */
 
     /* pad with zeros */
-    if (md4->buffLen > MD4_PAD_SIZE) {
-        XMEMSET(&local[md4->buffLen], 0, MD4_BLOCK_SIZE - md4->buffLen);
-        md4->buffLen += MD4_BLOCK_SIZE - md4->buffLen;
+    if (md4->buffLen > WC_MD4_PAD_SIZE) {
+        XMEMSET(&local[md4->buffLen], 0, WC_MD4_BLOCK_SIZE - md4->buffLen);
+        md4->buffLen += WC_MD4_BLOCK_SIZE - md4->buffLen;
 
         #ifdef BIG_ENDIAN_ORDER
-            ByteReverseWords(md4->buffer, md4->buffer, MD4_BLOCK_SIZE);
+            ByteReverseWords(md4->buffer, md4->buffer, WC_MD4_BLOCK_SIZE);
         #endif
         Transform(md4);
         md4->buffLen = 0;
     }
-    XMEMSET(&local[md4->buffLen], 0, MD4_PAD_SIZE - md4->buffLen);
-   
+    XMEMSET(&local[md4->buffLen], 0, WC_MD4_PAD_SIZE - md4->buffLen);
+
     /* put lengths in bits */
-    md4->hiLen = (md4->loLen >> (8*sizeof(md4->loLen) - 3)) + 
+    md4->hiLen = (md4->loLen >> (8*sizeof(md4->loLen) - 3)) +
                  (md4->hiLen << 3);
     md4->loLen = md4->loLen << 3;
 
     /* store lengths */
     #ifdef BIG_ENDIAN_ORDER
-        ByteReverseWords(md4->buffer, md4->buffer, MD4_BLOCK_SIZE);
+        ByteReverseWords(md4->buffer, md4->buffer, WC_MD4_BLOCK_SIZE);
     #endif
     /* ! length ordering dependent on digest endian type ! */
-    XMEMCPY(&local[MD4_PAD_SIZE], &md4->loLen, sizeof(word32));
-    XMEMCPY(&local[MD4_PAD_SIZE + sizeof(word32)], &md4->hiLen, sizeof(word32));
+    XMEMCPY(&local[WC_MD4_PAD_SIZE], &md4->loLen, sizeof(word32));
+    XMEMCPY(&local[WC_MD4_PAD_SIZE + sizeof(word32)], &md4->hiLen, sizeof(word32));
 
     Transform(md4);
     #ifdef BIG_ENDIAN_ORDER
-        ByteReverseWords(md4->digest, md4->digest, MD4_DIGEST_SIZE);
+        ByteReverseWords(md4->digest, md4->digest, WC_MD4_DIGEST_SIZE);
     #endif
-    XMEMCPY(hash, md4->digest, MD4_DIGEST_SIZE);
+    XMEMCPY(hash, md4->digest, WC_MD4_DIGEST_SIZE);
 
     wc_InitMd4(md4);  /* reset state */
 }

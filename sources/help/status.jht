@@ -1,0 +1,9 @@
+#status <num> {text} [color]
+  sets [colored] text of field <num> in status bar, numbered from 1
+#status count <count>
+  sets number of fields in status bar, from 0 to 10
+#status size {<num>|all} {auto|fit|<len>}
+  sets size of field <num> (or all fields at once)
+    auto - size is set to 10 characters at startup and then extends to contents if needed
+    fit - size is fitted to contents
+    <len> - size is set to <len> characters

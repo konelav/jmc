@@ -60,6 +60,11 @@
 #define ID_INDICATOR_INFO3              506
 #define ID_INDICATOR_INFO4              507
 #define ID_INDICATOR_INFO5              508
+#define ID_INDICATOR_INFO6              509
+#define ID_INDICATOR_INFO7              510
+#define ID_INDICATOR_INFO8              511
+#define ID_INDICATOR_INFO9              512
+#define ID_INDICATOR_INFO10             513
 #define IDC_EDIT                        1000
 #define IDC_COUNT                       1001
 #define IDC_SETS                        1002

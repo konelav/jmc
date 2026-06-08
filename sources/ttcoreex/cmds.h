@@ -127,6 +127,7 @@ jmc_cmdi jmc_cmds[JMC_CMDS_NUM]={
 		   {L"sync",&sync_command,L"\0"},
 		   {L"proxy",&proxy_command,L"\0"},
 		   {L"telnet", &telnet_command, L"\0"},
+		   {L"websocket", &websocket_command, L"\0"},
 		   {L"promptend", &promptend_command, L"\0"},
 		   {L"wsize", &wsize_command, L"\0"},
 		   {L"replace", &replace_command, L"\0"},

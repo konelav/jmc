@@ -20,7 +20,8 @@
 		ID_Unload,
 		ID_Prompt,
 		ID_Telnet,
-		ID_GuiAction
+		ID_GuiAction,
+		ID_Websocket
 
     };
 
@@ -103,6 +104,7 @@ public:
 	STDMETHOD(wGetWidth)(/*[in]*/ LONG wndNum, /*[out, retval]*/ LONG *nWidth);
 	STDMETHOD(wGetHeight)(/*[in]*/ LONG wndNum, /*[out, retval]*/ LONG *nHeight);
 	STDMETHOD(DoTelnet)(/*[in]*/LONG Command, /*[in, optional]*/ LONG Option, /*[in, optional]*/ BSTR bstrData);
+	STDMETHOD(DoWebsocket)(/*[in]*/LONG Opcode, /*[in, optional]*/ BSTR bstrData);
 	STDMETHOD(ToText)(/*[in]*/ BSTR bstrANSI, /*[out, retval]*/ BSTR *bstrText);
 	STDMETHOD(ToColored)(/*[in]*/ BSTR bstrANSI, /*[out, retval]*/ BSTR *bstrColored);
 	STDMETHOD(FromColored)(/*[in]*/ BSTR bstrColored, /*[out, retval]*/ BSTR *bstrANSI);

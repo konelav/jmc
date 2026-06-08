@@ -329,6 +329,7 @@ void write_command(wchar_t *arg)
 	wchar_t set_fn[MAX_PATH+2], glob_fn[MAX_PATH+2];
 
     wchar_t buffer[BUFFER_SIZE*10], filename[BUFFER_SIZE], group[BUFFER_SIZE];
+	wchar_t tmp[BUFFER_SIZE], tmp2[BUFFER_SIZE];
     struct listnode *nodeptr;
     int i;
     CGROUP* grp ;
@@ -507,7 +508,9 @@ void write_command(wchar_t *arg)
 					(ulProxyAddress >>  8) & 0xff, 
 					(ulProxyAddress >>  0) & 0xff);
 			prepare_for_write(L"proxy", 
-				(dwProxyType == PROXY_SOCKS4) ? L"socks4" : L"socks5",
+				(dwProxyType == PROXY_SOCKS4) ? L"socks4" : 
+				(dwProxyType == PROXY_SOCKS5) ? L"socks5" :
+					L"http",
 				addr,
 				A2W(sProxyUserName),
 				A2W(sProxyUserPassword),
@@ -537,8 +540,49 @@ void write_command(wchar_t *arg)
 			prepare_for_write(L"secure", L"tls1.2", L"ca", 
 				(strCAFile.size() ? strCAFile.c_str() : L"clear"), L"", buffer);
 			break;
+		case TLS_TLS1_3:
+			prepare_for_write(L"secure", L"tls1.3", L"ca", 
+				(strCAFile.size() ? strCAFile.c_str() : L"clear"), L"", buffer);
+			break;
 		}
 		set_lines += buffer;
+
+		if (bSecureDebugEnabled)
+			prepare_for_write(L"secure", L"debug", L"on", L"", L"", buffer);
+		else
+			prepare_for_write(L"secure", L"debug", L"off", L"", L"", buffer);
+		set_lines += buffer;
+
+		//save status lines settings
+		swprintf(tmp, L"%d", infoCount);
+		prepare_for_write(L"status", L"count", tmp, L"", L"", buffer);
+		set_lines += buffer;
+
+		int min_size, max_size;
+		min_size = max_size = infoSize[0];
+		for (int nstat = 1; nstat < infoCount; nstat++) {
+			if (min_size > infoSize[nstat])
+				min_size = infoSize[nstat];
+			if (max_size < infoSize[nstat])
+				max_size = infoSize[nstat];
+		}
+		if (min_size == max_size) {
+			if (min_size == -1)
+				wcscpy(tmp, L"fit");
+			else if (min_size == 0)
+				wcscpy(tmp, L"auto");
+			else
+				swprintf(tmp, L"%d", min_size);
+			prepare_for_write(L"status", L"size", L"all", tmp, L"", buffer);
+			set_lines += buffer;
+		} else {
+			for (int nstat = 1; nstat <= infoCount; nstat++) {
+				swprintf(tmp, L"%d", nstat);
+				swprintf(tmp2, L"%d", infoSize[nstat-1]);
+				prepare_for_write(L"status", L"size", tmp, tmp2, L"", buffer);
+				set_lines += buffer;
+			}
+		}
 
 		//save codepage settings
 		prepare_for_write(L"codepage", CPNames[MudCodePage].c_str(), L"", L"", L"", buffer);
@@ -555,6 +599,22 @@ void write_command(wchar_t *arg)
 			prepare_for_write(L"telnet", L"debug", L"on", L"", L"", buffer);
 		else
 			prepare_for_write(L"telnet", L"debug", L"off", L"", L"", buffer);
+		set_lines += buffer;
+
+		//save websocket options
+		for (std::map<wstring,wstring>::iterator it = mWebsocketOptions.begin(); it != mWebsocketOptions.end(); it++) {
+			prepare_for_write(L"websocket", it->first.c_str(), L"enable", it->second.c_str(), L"", L"", buffer);
+			set_lines += buffer;
+		}
+		if (bWebsocketDebugEnabled)
+			prepare_for_write(L"websocket", L"debug", L"on", L"", L"", buffer);
+		else
+			prepare_for_write(L"websocket", L"debug", L"off", L"", L"", buffer);
+		set_lines += buffer;
+		if (bWebsocketEnabled)
+			prepare_for_write(L"websocket", L"on", L"", L"", L"", buffer);
+		else
+			prepare_for_write(L"websocket", L"off", L"", L"", L"", buffer);
 		set_lines += buffer;
 
 		//save oob (out-of-band) settings

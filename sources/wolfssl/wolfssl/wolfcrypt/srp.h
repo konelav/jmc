@@ -1,12 +1,12 @@
 /* srp.h
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -19,6 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
+/*!
+    \file wolfssl/wolfcrypt/srp.h
+*/
 
 #ifdef WOLFCRYPT_HAVE_SRP
 
@@ -29,7 +32,7 @@
 #include <wolfssl/wolfcrypt/sha.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 #include <wolfssl/wolfcrypt/sha512.h>
-#include <wolfssl/wolfcrypt/integer.h>
+#include <wolfssl/wolfcrypt/wolfmath.h>
 
 #ifdef __cplusplus
     extern "C" {
@@ -37,26 +40,32 @@
 
 /* Select the largest available hash for the buffer size. */
 #if defined(WOLFSSL_SHA512)
-    #define SRP_MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
+    #define SRP_MAX_DIGEST_SIZE WC_SHA512_DIGEST_SIZE
 #elif defined(WOLFSSL_SHA384)
-    #define SRP_MAX_DIGEST_SIZE SHA384_DIGEST_SIZE
+    #define SRP_MAX_DIGEST_SIZE WC_SHA384_DIGEST_SIZE
 #elif !defined(NO_SHA256)
-    #define SRP_MAX_DIGEST_SIZE SHA256_DIGEST_SIZE
+    #define SRP_MAX_DIGEST_SIZE WC_SHA256_DIGEST_SIZE
 #elif !defined(NO_SHA)
-    #define SRP_MAX_DIGEST_SIZE SHA_DIGEST_SIZE
+    #define SRP_MAX_DIGEST_SIZE WC_SHA_DIGEST_SIZE
 #else
     #error "You have to have some kind of SHA hash if you want to use SRP."
 #endif
 
 /* Set the minimum number of bits acceptable in an SRP modulus */
-#define SRP_DEFAULT_MIN_BITS 512
+#define SRP_MODULUS_MIN_BITS 512
+
+/* Set the minimum number of bits acceptable for private keys (RFC 5054) */
+#define SRP_PRIVATE_KEY_MIN_BITS 256
+
+/* salt size for SRP password */
+#define SRP_SALT_SIZE  16
 
 /**
  * SRP side, client or server.
  */
 typedef enum {
     SRP_CLIENT_SIDE  = 0,
-    SRP_SERVER_SIDE  = 1,
+    SRP_SERVER_SIDE  = 1
 } SrpSide;
 
 /**
@@ -66,8 +75,9 @@ typedef enum {
         SRP_TYPE_SHA    = 1,
         SRP_TYPE_SHA256 = 2,
         SRP_TYPE_SHA384 = 3,
-        SRP_TYPE_SHA512 = 4,
+        SRP_TYPE_SHA512 = 4
 } SrpType;
+
 
 /**
  * SRP hash struct.
@@ -76,16 +86,16 @@ typedef struct {
     byte type;
     union {
         #ifndef NO_SHA
-            Sha sha;
+            wc_Sha sha;
         #endif
         #ifndef NO_SHA256
-            Sha256 sha256;
+            wc_Sha256 sha256;
         #endif
         #ifdef WOLFSSL_SHA384
-            Sha384 sha384;
+            wc_Sha384 sha384;
         #endif
         #ifdef WOLFSSL_SHA512
-            Sha512 sha512;
+            wc_Sha512 sha512;
         #endif
     } data;
 } SrpHash;
@@ -114,6 +124,7 @@ typedef struct Srp {
         /**< The default function used by this implementation is a modified   */
         /**< version of t_mgf1 that uses the proper hash function according   */
         /**< to srp->type.                                                    */
+    void*   heap;                   /**< heap hint pointer                    */
 } Srp;
 
 /**
@@ -126,6 +137,8 @@ typedef struct Srp {
  * @return 0 on success, {@literal <} 0 on error. @see error-crypt.h
  */
 WOLFSSL_API int wc_SrpInit(Srp* srp, SrpType type, SrpSide side);
+WOLFSSL_API int wc_SrpInit_ex(Srp* srp, SrpType type, SrpSide side,
+    void* heap, int devId);
 
 /**
  * Releases the Srp struct resources after usage.
@@ -235,7 +248,7 @@ WOLFSSL_API int wc_SrpSetPrivate(Srp* srp, const byte* priv, word32 size);
  *
  * The public ephemeral value is known as:
  *   A at the client side. A = g ^ a % N
- *   B at the server side. B = (k * v + (g ˆ b % N)) % N
+ *   B at the server side. B = (k * v + (g ^ b % N)) % N
  * This function MUST be called after wc_SrpSetPassword or wc_SrpSetVerifier.
  *
  * @param[in,out] srp       the Srp structure.

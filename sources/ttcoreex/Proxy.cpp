@@ -1,9 +1,11 @@
 #include "stdafx.h"
-#include <winsock.h>
+#include <winsock2.h>
 #include "tintin.h"
 #include "Proxy.h"
 
 static unsigned char socks5_method_implemented [] = { NO_AUTH_REQ, USER_PWD };
+
+extern wchar_t MUDHostName[256];
 
 /* socks 5 functions */
 static int socks5_create_methods (struct socks5_methods * method, unsigned char met);
@@ -18,6 +20,10 @@ static int socks4_connect(struct socks4_req * socks4, int type, int dst_port, st
 static int socks4_create_packet(struct socks4_req *socks4, int vn_connect,int cd_connect,int dst_port,struct in_addr * dstip, char * userid);
 static int socks4_in_all(int command, int port, struct in_addr * dst, int a, struct sockaddr * serv);
 /* end of socks 4 functions */
+
+/* http functions */
+static int http_in_all(const char *method, int port, const wchar_t *host, int sock, struct sockaddr * serv);
+/* end of http functions */
 
 static int socks_connect_socks_server(int sock, struct sockaddr * server, void * request, int version);
 static int socks_new_connect_ss (int sock, struct sockaddr * server, int val);
@@ -57,7 +63,9 @@ void proxy_command(wchar_t *arg)
 			swprintf(buf, rs::rs(1268));
 		else
 			swprintf(buf, rs::rs(1269),
-			(dwProxyType == PROXY_SOCKS4 ? L"socks4" : L"socks5"),
+			(dwProxyType == PROXY_SOCKS4 ? L"socks4" : 
+			 dwProxyType == PROXY_SOCKS5 ? L"socks5" :
+				L"http"),
 			(ulProxyAddress >> 24) & 0xff, (ulProxyAddress >> 16) & 0xff, (ulProxyAddress >> 8) & 0xff, (ulProxyAddress >> 0) & 0xff,
 			(dwProxyPort ? dwProxyPort : PROXY_DEFAULT_PORT),
 			(sProxyUserName[0] ? A2W(sProxyUserName) : L"-"),
@@ -143,6 +151,8 @@ void proxy_command(wchar_t *arg)
 		type = PROXY_SOCKS4;
 	else if (is_abrev(cmd, L"socks5"))
 		type = PROXY_SOCKS5;
+	else if (is_abrev(cmd, L"http"))
+		type = PROXY_HTTP;
 	else {
 		tintin_puts2(rs::rs(1273));
 		return;
@@ -170,7 +180,9 @@ void proxy_command(wchar_t *arg)
 		swprintf(buf, rs::rs(1270));
 	else
 		swprintf(buf, rs::rs(1275),
-		(dwProxyType == PROXY_SOCKS4 ? L"socks4" : L"socks5"),
+		(dwProxyType == PROXY_SOCKS4 ? L"socks4" : 
+		 dwProxyType == PROXY_SOCKS5 ? L"socks5" :
+			L"http"),
 		(ulProxyAddress >> 24) & 0xff, (ulProxyAddress >> 16) & 0xff, (ulProxyAddress >> 8) & 0xff, (ulProxyAddress >> 0) & 0xff,
 		(dwProxyPort ? dwProxyPort : PROXY_DEFAULT_PORT),
 		(sProxyUserName[0] ? A2W(sProxyUserName) : L"-"),
@@ -216,6 +228,13 @@ int proxy_connect(int sock, const struct sockaddr * sockaddr, int socketlen)
 				free (serv);
 				return PROXY_KO;
 			}	
+			break;
+
+		case PROXY_HTTP:
+			if ( http_in_all("CONNECT", bi->sin_port, MUDHostName, sock, (struct sockaddr *) serv)){
+				free(serv);
+				return PROXY_KO;
+			}
 			break;
 		
 		default:
@@ -406,7 +425,7 @@ static int socks4_in_all(int command, int port, struct in_addr * dst, int a, str
 	}
 	free(socks_req);
 	return PROXY_OK;	
-}		
+}
 
 
 static int socks4_connect(struct socks4_req * socks4, int type, int dst_port, struct in_addr * dstip, char * userid){
@@ -423,6 +442,91 @@ static int socks4_connect(struct socks4_req * socks4, int type, int dst_port, st
 			break;
 	};
 	return PROXY_OK;
+}
+
+static int http_in_all(const char *method, int port, const wchar_t *whost, int sock, struct sockaddr * serv){
+	USES_CONVERSION;
+
+	const char *need_resp = "HTTP/1.1 200 ";
+	char * http_req = NULL;
+
+	char * response = NULL;
+    int val = sizeof(struct sockaddr_in);
+	int rlen = 0; 
+	int rrlen = 0; 
+
+	if (socks_new_connect_ss (sock, serv, val) != 0) 
+		return PROXY_KO;
+
+	
+	const char *host = W2A(whost);
+	http_req = (char*)malloc(strlen(method) + strlen(host) + 512);
+    if (!http_req)
+		return PROXY_ENOMEM;
+
+	char auth[BUFFER_SIZE];
+
+	auth[0] = '\0';
+	if (sProxyUserName[0]) {
+		char userpass[BUFFER_SIZE], b64userpass[BUFFER_SIZE];
+		sprintf(userpass, "%s:%s", sProxyUserName, sProxyUserPassword);
+		base64_encode(b64userpass, sizeof(b64userpass), userpass, strlen(userpass));
+		sprintf(auth, "Proxy-Authorization: Basic %s\r\n", b64userpass);
+	}
+
+	sprintf(http_req,
+		"%s %s:%d HTTP/1.1\r\n"
+		"%s"
+		"\r\n",
+		method,
+		host,
+		ntohs(port),
+		auth
+	);
+
+	int sent = socks_send(sock, strlen(http_req), http_req);
+	free(http_req);
+	if (sent <= 0)
+		return PROXY_KO;
+	
+	rrlen = strlen(need_resp);
+	response = (char *)malloc (rrlen);
+	if (!response)
+		return PROXY_ENOMEM;
+
+	memset(response, 0, rrlen);
+
+	int ret = PROXY_KO;
+	if (socks_recv (sock, rrlen, response) <= 0){
+		free(response);	
+		return PROXY_KO;
+	}
+	if (strncmp(response, need_resp, rrlen)) {
+		wchar_t msg[BUFFER_SIZE];
+		swprintf(msg, L"#proxy: wrong HTTP proxy response %ls", A2W(response));
+		tintin_puts(msg);
+		ret = PROXY_KO;
+	} else {
+		ret = PROXY_OK;
+	}
+
+	for (;;) {
+		if (socks_recv(sock, 1, response) <= 0) {
+			free(response);
+			return PROXY_KO;
+		}
+		if (response[0] == '\r') {
+			if (socks_recv(sock, 3, response) <= 0) {
+				free(response);
+				return PROXY_KO;
+			}
+			if (!strncmp(response, "\n\r\n", 3))
+				break;
+		}
+	}
+
+	free(response);
+	return ret;	
 }
 
 static int socks_send(int sock, int lenght, void * sen){
@@ -446,13 +550,14 @@ static int socks_send(int sock, int lenght, void * sen){
 
 static int socks_recv (int sock, int rrlen, void * response){
 
+	struct timeval tm = {1, 0};
 	int slen = 0;
 	fd_set set;
 
 	do{
 		FD_ZERO(&set);
 		FD_SET(sock, &set);
-		if (select(sock + 1, &set, NULL, NULL, NULL) <= 0)
+		if (select(sock + 1, &set, NULL, NULL, &tm) <= 0)
 			return PROXY_KO;
 		if (FD_ISSET(sock, &set))
 			break;

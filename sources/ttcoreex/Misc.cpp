@@ -430,50 +430,82 @@ void status_command(wchar_t* arg)
     wchar_t left[BUFFER_SIZE], right[BUFFER_SIZE], color[BUFFER_SIZE];
     
     arg=get_arg_in_braces(arg,left,STOP_SPACES,sizeof(left)/sizeof(wchar_t)-1);
-    arg=get_arg_in_braces(arg,right,WITH_SPACES,sizeof(right)/sizeof(wchar_t)-1);
-    arg=get_arg_in_braces(arg,color,WITH_SPACES,sizeof(color)/sizeof(wchar_t)-1);
 
-    if ( !*left || !iswdigit(*left) ) {
+	int statNum = -1;
+
+	if (is_abrev(left, L"count")) {
+		arg=get_arg_in_braces(arg,right,STOP_SPACES,sizeof(right)/sizeof(wchar_t)-1);
+
+		if (!*right || !iswdigit(*right)) {
+			tintin_puts2(L"#status count: no count param"); // TODO rs
+			return;
+		}
+		int statCnt = _wtoi(right);
+		if (statCnt < 0 || statCnt > MAX_STATUS_NUM) {
+			tintin_puts2(L"#status count: wront count param"); // TODO rs
+			return;
+		}
+
+		infoCount = statCnt;
+		PostMessage(hwndMAIN, WM_USER+651, 0, 0);
+	} else if (is_abrev(left, L"size")) {
+		arg=get_arg_in_braces(arg,right,STOP_SPACES,sizeof(right)/sizeof(wchar_t)-1);
+		arg=get_arg_in_braces(arg,color,WITH_SPACES,sizeof(color)/sizeof(wchar_t)-1);
+
+		if (*right && iswdigit(*right)) {
+			statNum = _wtoi(right);
+			if ( statNum < 1 || statNum > MAX_STATUS_NUM ) {
+				tintin_puts2(rs::rs(1137));
+				return;
+			}
+		} else if (!is_abrev(right, L"all")) {
+			tintin_puts2(L"#status size: wrong status number");  //TODO rs
+			return;
+		}
+		
+		int size;
+		if (*color && iswdigit(*color))
+			size = _wtoi(color);
+		else if (is_abrev(color, L"fit"))
+			size = -1;
+		else if (is_abrev(color, L"auto"))
+			size = 0;
+		else {
+			tintin_puts2(L"#status size: wrong size param"); // TODO rs
+			return;
+		}
+		if (statNum > 0)
+			infoSize[statNum-1] = size;
+		else
+			for (statNum = 1; statNum <= MAX_STATUS_NUM; statNum++)
+				infoSize[statNum-1] = size;
+		PostMessage(hwndMAIN, WM_USER+651, 0, 0);
+	} else  if ( !*left || !iswdigit(*left) ) {
         tintin_puts2(rs::rs(1136));
         return;
-    }
+    } else {
+		arg=get_arg_in_braces(arg,right,WITH_SPACES,sizeof(right)/sizeof(wchar_t)-1);
+		arg=get_arg_in_braces(arg,color,WITH_SPACES,sizeof(color)/sizeof(wchar_t)-1);
 
-    int statNum = _wtoi(left);
-    if ( statNum < 1 || statNum > 5 ) {
-        tintin_puts2(rs::rs(1137));
-        return;
-    }
+		statNum = _wtoi(left);
+		if ( statNum < 1 || statNum > MAX_STATUS_NUM ) {
+			tintin_puts2(rs::rs(1137));
+			return;
+		}
 
-    wchar_t* dest = strInfo1;
-    switch ( statNum ) {
-    case 1:
-        dest = strInfo1;
-        break;
-    case 2:
-        dest = strInfo2;
-        break;
-    case 3:
-        dest = strInfo3;
-        break;
-    case 4:
-        dest = strInfo4;
-        break;
-    case 5:
-        dest = strInfo5;
-        break;
-    default:
-        break;
-    };
+		wchar_t* dest = strInfo[statNum-1];
 
-    wchar_t buff[BUFFER_SIZE];
-    substitute_myvars (right, buff, sizeof(buff)/sizeof(wchar_t));
+		wchar_t buff[BUFFER_SIZE];
+		substitute_myvars (right, buff, sizeof(buff)/sizeof(wchar_t));
 
-    EnterCriticalSection(&secStatusSection);
-    if ( *color ) {
-        add_codes(buff, dest, color);
-    } else 
-        wcscpy(dest, buff);
-    LeaveCriticalSection(&secStatusSection);
+		EnterCriticalSection(&secStatusSection);
+		if ( *color ) {
+			add_codes(buff, dest, color);
+		} else 
+			wcscpy(dest, buff);
+		LeaveCriticalSection(&secStatusSection);
+		PostMessage(hwndMAIN, WM_USER+650, statNum, 0);
+	}
 }
 
 void tabadd_command(wchar_t* arg)
@@ -1335,4 +1367,31 @@ void autoreconnect_command(wchar_t*arg)
 }
 
 //* /en
+int base64_encode(char *dst, int capacity, const char *src, int size) {
+	static const char codes[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+	int written = 0;
+	unsigned int data = 0, datalen = 0;
+	while (written < capacity - 1 && size > 0) {
+		data = (data << 8) | (unsigned int)(*src++);
+		datalen += 8;
+		size--;
+		while (datalen >= 6 && written < capacity - 1) {
+			datalen -= 6;
+			dst[written++] = codes[(data >> datalen) & 0x3F];
+		}
+	}
+	char tail[4], taillen = 0;
+	if (datalen > 0) { // 2 or 4
+		data <<= (6 - datalen);
+		tail[taillen++] = codes[data & 0x3F];
+		tail[taillen++] = '=';
+		if (datalen == 2)
+			tail[taillen++] = '=';
+	}
+	for (int i = 0; i < taillen && written < capacity - 1; i++)
+		dst[written++] = tail[i];
+
+	dst[written] = '\0';
+	return written;
+}

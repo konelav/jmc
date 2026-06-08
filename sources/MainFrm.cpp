@@ -28,6 +28,15 @@ static char THIS_FILE[] = __FILE__;
 
 int shouldMinimizeToTray = -1;
 
+
+extern int LengthWithoutANSI(const wchar_t* str);
+extern void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
+					  BOOL ExtAnsiColors, BOOL DarkOnly, BOOL Invert, BOOL ShowHiddenFg, BOOL ShowHiddenBg,
+					  BOOL &AnsiBold, int &CurrentFg, int &CurrentBg,
+					  COLORREF &AnsiColorFg, COLORREF &AnsiColorBg,
+					  COLORREF &ColorFg, COLORREF &ColorBg,
+					  const wchar_t **str);
+
 static UINT indicators[] =
 {
 	    ID_SEPARATOR,           // status line indicator
@@ -37,22 +46,24 @@ static UINT indicators[] =
         ID_INDICATOR_INFO3,
         ID_INDICATOR_INFO4,
         ID_INDICATOR_INFO5,
+		ID_INDICATOR_INFO6,
+		ID_INDICATOR_INFO7,
+		ID_INDICATOR_INFO8,
+		ID_INDICATOR_INFO9,
+		ID_INDICATOR_INFO10,
         ID_INDICATOR_CONNECTED,
 	    ID_INDICATOR_LOGGED,
         ID_PATH_WRITING
 };
 
 enum INDICATOR_NUM{
-        NUM_INDICATOR_INFO1 = 2,
-        NUM_INDICATOR_INFO2,
-        NUM_INDICATOR_INFO3,
-        NUM_INDICATOR_INFO4,
-        NUM_INDICATOR_INFO5,
-        NUM_INDICATOR_CONNECTED,
-	    NUM_INDICATOR_LOGGED,
-        NUM_PATH_WRITING, 
-        NUM_TICKER=1
+	NUM_TICKER=1,
+    NUM_INDICATOR_INFO1 = 2
+        
 };
+#define NUM_INDICATOR_CONNECTED (NUM_INDICATOR_INFO1 + infoCount)
+#define NUM_INDICATOR_LOGGED	(NUM_INDICATOR_CONNECTED + 1)
+#define NUM_PATH_WRITING		(NUM_INDICATOR_CONNECTED + 2)
 
 CTray sysTray;
 
@@ -82,7 +93,47 @@ CSize CJMCStatus::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
 		CRect border = GetBorders();
 		ret.cy = m_nYsize + border.top + border.bottom + 2;
 	}
+	ResetContents();
 	return ret;
+}
+
+void CJMCStatus::ResetContents() {
+	for (int i = 0; i < MAX_STATUS_NUM; i++)
+		m_StatusDrawn[i] = m_StatusSet[i] + L' ';
+}
+
+bool CJMCStatus::SetStatus(int StatusNum, const CString &Value) {
+	if (!(1 <= StatusNum && StatusNum <= MAX_STATUS_NUM))
+		return false;
+	if (m_StatusDrawn[StatusNum-1] == Value && m_StatusSet[StatusNum-1] == Value)
+		return false;
+
+	CSmcDoc* pDoc = (CSmcDoc*) (((CMainFrame*)AfxGetMainWnd())->GetActiveDocument());
+    if (!pDoc) 
+        return false;
+
+	m_StatusSet[StatusNum-1] = Value;
+
+	if (StatusNum <= infoCount) {
+		int Width = LengthWithoutANSI(Value) * pDoc->m_nCharX;
+		UINT Style, ID;
+		int Size, SetSize;
+		int num_id = (NUM_INDICATOR_INFO1 + StatusNum-1);
+		GetPaneInfo(num_id , ID, Style, Size);
+
+		SetSize = Size;
+		if ( (infoSize[StatusNum-1] ==  0 && Size <  Width))
+			SetSize = Width; 
+		else if (infoSize[StatusNum-1] == -1)
+			SetSize = Width;
+		else if (infoSize[StatusNum-1] > 0)
+			SetSize = infoSize[StatusNum-1] * pDoc->m_nCharX;
+
+		if (Size != SetSize)
+			SetPaneInfo(num_id, ID, Style, SetSize);
+	}
+
+	return true;
 }
 
 void CJMCStatus::OnLButtonDown(UINT nFlags, CPoint point) {
@@ -118,33 +169,14 @@ void CJMCStatus::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint poin
 	int index = 0;
 	const wchar_t *strInfo = L"";
 
-	GetItemRect(NUM_INDICATOR_INFO1, &rect);
-	if (rect.PtInRect(point)) {
-		index = 1;
-		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo1;
-	}
-	GetItemRect(NUM_INDICATOR_INFO2, &rect);
-	if (rect.PtInRect(point)) {
-		index = 2;
-		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo2;
-	}
-	GetItemRect(NUM_INDICATOR_INFO3, &rect);
-	if (rect.PtInRect(point)) {
-		index = 3;
-		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo3;
-	}
-	GetItemRect(NUM_INDICATOR_INFO4, &rect);
-	if (rect.PtInRect(point)) {
-		index = 4;
-		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo4;
-	}
-	GetItemRect(NUM_INDICATOR_INFO5, &rect);
-	if (rect.PtInRect(point)) {
-		index = 5;
-		strInfo = ((CMainFrame*)AfxGetMainWnd())->m_strInfo5;
+	for (int nstat = 1; nstat <= infoCount; nstat++) {
+		GetItemRect(NUM_INDICATOR_INFO1 + nstat - 1, &rect);
+		if (rect.PtInRect(point))
+			index = nstat;
 	}
 
 	if (index) {
+		strInfo = m_StatusSet[index - 1];
 		if ( WaitForSingleObject (eventGuiAction, 0 ) == WAIT_TIMEOUT ) {
 			swprintf(strGuiAction, L"status %ls %d %lc%lc%lc%lc%lc %ls", event, index,
 				(nFlags & MK_CONTROL) ? L'C' : L'_',
@@ -158,14 +190,6 @@ void CJMCStatus::HandleMouseEvent(const wchar_t *event, UINT nFlags, CPoint poin
 		}
 	}
 }
-
-extern int LengthWithoutANSI(const wchar_t* str);
-extern void HandleCSI(const COLORREF *FgColors, const COLORREF *BgColors,
-					  BOOL ExtAnsiColors, BOOL DarkOnly, BOOL Invert, BOOL ShowHiddenFg, BOOL ShowHiddenBg,
-					  BOOL &AnsiBold, int &CurrentFg, int &CurrentBg,
-					  COLORREF &AnsiColorFg, COLORREF &AnsiColorBg,
-					  COLORREF &ColorFg, COLORREF &ColorBg,
-					  const wchar_t **str);
 
 //vls-begin// multiple output
 static void __stdcall GetOutputName(int wnd, wchar_t *name, int maxlen)
@@ -214,6 +238,7 @@ static void __stdcall SetWindowSizeFunc(int wnd, int width, int height)
 static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* strText)
 {
     CSmcDoc* pDoc = (CSmcDoc*) (((CMainFrame*)AfxGetMainWnd())->GetActiveDocument());
+
     if ( !pDoc) 
         return;
     ASSERT( pDoc->IsKindOf( RUNTIME_CLASS( CSmcDoc ) ) );
@@ -222,7 +247,9 @@ static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* st
 	BOOL bold = FALSE;
 	COLORREF ansiBg, ansiFg, colorF, colorB;
 
-	SelectObject(lpDrawItemStruct->hDC ,pDoc->m_fntText.GetSafeHandle ());
+	HDC dc = lpDrawItemStruct->hDC;
+
+	HGDIOBJ old_obj = SelectObject(dc ,pDoc->m_fntText.GetSafeHandle ());
 
 	CRect rect = lpDrawItemStruct->rcItem;
 	int shift = 0;
@@ -243,18 +270,18 @@ static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* st
 		while (*end && *end != ESC_SEQUENCE_MARK)
 			end++;
 
-		SetTextColor(lpDrawItemStruct->hDC , colorF);
-		SetBkColor(lpDrawItemStruct->hDC , colorB);
+		SetTextColor(dc , colorF);
+		SetBkColor(dc , colorB);
 
 		if (end > ptr) {
 			int len = end - ptr;
 			CRect rctext(0, 0, 0, 0);
 
-			DrawText(lpDrawItemStruct->hDC, ptr, len, &rctext, DT_LEFT | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT | DT_NOPREFIX );
+			DrawText(dc, ptr, len, &rctext, DT_LEFT | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT | DT_NOPREFIX );
 
 			CRect rc = rect;
 			rc.left += shift;
-			ExtTextOut(lpDrawItemStruct->hDC, rc.left , rc.top, ETO_OPAQUE, &rc, ptr, len, NULL);
+			ExtTextOut(dc, rc.left , rc.top, ETO_OPAQUE, &rc, ptr, len, NULL);
 
 			shift += rctext.Width();
 		}
@@ -263,69 +290,40 @@ static void DrawColoredText(LPDRAWITEMSTRUCT lpDrawItemStruct, const wchar_t* st
 	}
 
 	if (shift == 0) {
-		SetTextColor(lpDrawItemStruct->hDC , colorF);
-		SetBkColor(lpDrawItemStruct->hDC , colorB);
-		ExtTextOut(lpDrawItemStruct->hDC, rect.left , rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
+		SetTextColor(dc , colorF);
+		SetBkColor(dc, colorB);
+		ExtTextOut(dc, rect.left , rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 	}
+
+	SelectObject(dc, old_obj);
 }
 
 void CJMCStatus::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-    static int count = 0;
-    HBITMAP hb;
-    switch ( lpDrawItemStruct->itemID  ) {
-    case NUM_INDICATOR_INFO1:
-        {
-            DrawColoredText(lpDrawItemStruct, ((CMainFrame*)AfxGetMainWnd())->m_strInfo1);
-        }
-        return;
-    case NUM_INDICATOR_INFO2:
-        {
-            DrawColoredText(lpDrawItemStruct, ((CMainFrame*)AfxGetMainWnd())->m_strInfo2);
-        }
-        return;
-    case NUM_INDICATOR_INFO3:
-        {
-            DrawColoredText(lpDrawItemStruct, ((CMainFrame*)AfxGetMainWnd())->m_strInfo3);
-        }
-        return;
-    case NUM_INDICATOR_INFO4:
-        {
-            DrawColoredText(lpDrawItemStruct, ((CMainFrame*)AfxGetMainWnd())->m_strInfo4);
-        }
-        return;
-    case NUM_INDICATOR_INFO5:
-        {
-            DrawColoredText(lpDrawItemStruct, ((CMainFrame*)AfxGetMainWnd())->m_strInfo5);
-        }
-        return;
-    case NUM_INDICATOR_CONNECTED:
-        {
-            if ( IsConnected() ) {
-                hb = (HBITMAP)m_bmpConnected;
-                break;
-            }
-        }
-        return;
-    case NUM_INDICATOR_LOGGED:
-        {
-            if ( IsLogging() ) {
-                hb = (HBITMAP)m_bmpLogged;
-                break;
-            }
-        }
-        return;
-    case NUM_PATH_WRITING:
-        {
-            if ( IsPathing () ) {
-                hb = (HBITMAP)m_bmpMarked;
-                break;
-            }
-        }
-        return;
-    default:
-        return;
-    }
+	if (NUM_INDICATOR_INFO1 <= lpDrawItemStruct->itemID && lpDrawItemStruct->itemID < NUM_INDICATOR_INFO1+infoCount) {
+		int num_id = lpDrawItemStruct->itemID - NUM_INDICATOR_INFO1;
+		const wchar_t *txt = m_StatusDrawn[num_id] = m_StatusSet[num_id];
+		DrawColoredText(lpDrawItemStruct, txt);
+		return;
+	}
+
+	HBITMAP hb;
+
+    if (lpDrawItemStruct->itemID == NUM_INDICATOR_CONNECTED) {
+		if (!IsConnected())
+			return;
+        hb = (HBITMAP)m_bmpConnected;
+	} else if (lpDrawItemStruct->itemID == NUM_INDICATOR_LOGGED) {
+		if (!IsLogging())
+			return;
+        hb = (HBITMAP)m_bmpLogged;
+	} else if (lpDrawItemStruct->itemID == ID_PATH_WRITING) {
+		if (!IsPathing())
+			return;
+        hb = (HBITMAP)m_bmpMarked;
+	} else
+		return;
+	
     HDC dc = CreateCompatibleDC (lpDrawItemStruct->hDC );
     SelectObject(dc, hb);
     BitBlt(lpDrawItemStruct->hDC, lpDrawItemStruct->rcItem.left, 
@@ -390,11 +388,16 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 //vls-end// multiple output
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUTWINDOW, OnUpdateControlBarMenu)
 
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO1, OnUpdateInfo1)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO2, OnUpdateInfo2)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO3, OnUpdateInfo3)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO4, OnUpdateInfo4)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO5, OnUpdateInfo5)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO1, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO2, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO3, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO4, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO5, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO6, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO7, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO8, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO9, OnUpdateInfo)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_INFO10, OnUpdateInfo)
 
     ON_MESSAGE(WM_USER+200, OnTabAdded)
     ON_MESSAGE(WM_USER+201, OnTabDeleted)
@@ -422,11 +425,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 
     ON_MESSAGE(WM_USER+600, OnCleanInput)
 //* en status refreshing
-    ON_MESSAGE(WM_USER+651, OnUpdStat1)
-    ON_MESSAGE(WM_USER+652, OnUpdStat2)
-    ON_MESSAGE(WM_USER+653, OnUpdStat3)
-    ON_MESSAGE(WM_USER+654, OnUpdStat4)
-    ON_MESSAGE(WM_USER+655, OnUpdStat5)
+    ON_MESSAGE(WM_USER+650, OnUpdStat)
+    ON_MESSAGE(WM_USER+651, OnUpdStatLayout)
 //*/en
 
 	ON_MESSAGE(WM_USER+680, OnUpdPing)
@@ -444,6 +444,8 @@ CMainFrame::CMainFrame()
 {
 
     m_wndSplitter.m_bInited = FALSE;
+
+	m_infoCount = -1;
 	
     m_wndSplitter.m_nUpSize = ::GetPrivateProfileInt(L"Main" , L"UpSize" , 300, szGLOBAL_PROFILE);
     m_wndSplitter.m_nDownSize = ::GetPrivateProfileInt(L"Main" , L"DownSize" , 100, szGLOBAL_PROFILE);
@@ -468,28 +470,26 @@ CMainFrame::~CMainFrame()
     ::WritePrivateProfileInt(L"Options" , L"MoreComingDelay" , MoreComingDelay , szGLOBAL_PROFILE);
 }
 
-int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+void CMainFrame::UpdateInfoParams()
 {
-    if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
-		return -1;
-    
-	if (!m_wndToolBar.CreateEx
-		(this,
-		TBSTYLE_FLAT,
-		WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY
-		| CBRS_SIZE_DYNAMIC) ||
-		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
-	{
-		TRACE0("Failed to create toolbar\n");
-		return -1;      // fail to create
-	}
+	if (m_infoCount == infoCount)
+		return;
 
-	if (!m_wndStatusBar.Create(this) ||
-		!m_wndStatusBar.SetIndicators(indicators,
-		  sizeof(indicators)/sizeof(UINT)))
+	m_infoCount = infoCount;
+
+	int nind = 0;
+	indicators[nind++] = ID_SEPARATOR;           // status line indicator
+	indicators[nind++] = ID_TICKER;
+	for (int nstat = 0; nstat < infoCount; nstat++)
+		indicators[nind++] = ID_INDICATOR_INFO1 + nstat;
+	indicators[nind++] = ID_INDICATOR_CONNECTED;
+	indicators[nind++] = ID_INDICATOR_LOGGED;
+	indicators[nind++] = ID_PATH_WRITING;
+
+	if (!m_wndStatusBar.SetIndicators(indicators, nind))
 	{
-		TRACE0("Failed to create status bar\n");
-		return -1;      // fail to create
+		TRACE0("Failed to resize status bar\n");
+		return;
 	}
 
 
@@ -498,26 +498,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_wndStatusBar.GetPaneInfo(0 , ID, Style, Size);
     m_wndStatusBar.SetPaneInfo(0 , ID, Style, 30);
 
-    m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO1 , ID, Style, Size);
-    m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO1, ID, Style, 150);
-    m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO1, SBT_OWNERDRAW );
-
-    m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO2 , ID, Style, Size);
-    m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO2, ID, Style, 150);
-    m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO2, SBT_OWNERDRAW );
-
-    m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO3 , ID, Style, Size);
-    m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO3, ID, Style, 150);
-    m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO3, SBT_OWNERDRAW );
-
-    m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO4 , ID, Style, Size);
-    m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO4, ID, Style, 150);
-    m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO4, SBT_OWNERDRAW );
-
-    m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO5 , ID, Style, Size);
-    m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO5, ID, Style, 150);
-    m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO5, SBT_OWNERDRAW );
-    
+	for (int statNum = 1; statNum <= infoCount; statNum++) {
+		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO1 + statNum-1, ID, Style, Size);
+		m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO1 + statNum-1, ID, Style , 100);
+		m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO1 + statNum-1, SBT_OWNERDRAW );
+	}    
 
     m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_CONNECTED , ID, Style, Size);
     m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_CONNECTED , ID, Style, 14);
@@ -536,6 +521,32 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_wndStatusBar.GetPaneInfo(NUM_TICKER , ID, Style, Size);
     m_wndStatusBar.SetPaneInfo(NUM_TICKER , ID, Style, 20);
+
+}
+
+int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+    if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+    
+	if (!m_wndToolBar.CreateEx
+		(this,
+		TBSTYLE_FLAT,
+		WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY
+		| CBRS_SIZE_DYNAMIC) ||
+		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
+	{
+		TRACE0("Failed to create toolbar\n");
+		return -1;      // fail to create
+	}
+
+	if (!m_wndStatusBar.Create(this))
+	{
+		TRACE0("Failed to create status bar\n");
+		return -1;      // fail to create
+	}
+
+	UpdateInfoParams();
 
     // TODO: Remove this if you don't want tool tips or a resizeable toolbar
 	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() |
@@ -886,97 +897,17 @@ void CMainFrame::OnUpdateTicker(CCmdUI* pUI)
         pUI->SetText(L"OFF");
 }
 
-void CMainFrame::OnUpdateInfo1(CCmdUI* pUI)
+void CMainFrame::OnUpdateInfo(CCmdUI* pUI)
 {
-    EnterCriticalSection(&secStatusSection);
-    if ( m_strInfo1 != strInfo1  ) {
-        m_strInfo1 = strInfo1;
-
-		int Width = LengthWithoutANSI(m_strInfo1) * pDoc->m_nCharX;
-		UINT Style, ID;
-		int Size;
-		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO1 , ID, Style, Size);
-		if ( Size < Width )
-			m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO1, ID, Style, Width);
-
-        m_wndStatusBar.GetStatusBarCtrl ().SetText(m_strInfo1, NUM_INDICATOR_INFO1, SBT_OWNERDRAW );
-    }
-    LeaveCriticalSection(&secStatusSection);
+	for (int nstatus = 1; nstatus <= infoCount; nstatus++) {
+		EnterCriticalSection(&secStatusSection);
+		bool changed = m_wndStatusBar.SetStatus(nstatus, strInfo[nstatus-1]);
+		LeaveCriticalSection(&secStatusSection);
+	
+		if (changed)
+			m_wndStatusBar.GetStatusBarCtrl ().SetText(0, NUM_INDICATOR_INFO1 + nstatus-1, SBT_OWNERDRAW );
+	}
 }
-
-void CMainFrame::OnUpdateInfo2(CCmdUI* pUI)
-{
-    EnterCriticalSection(&secStatusSection);
-    if ( m_strInfo2 != strInfo2  ) 
-	{
-        m_strInfo2 = strInfo2;
-
-		int Width = LengthWithoutANSI(m_strInfo2) * pDoc->m_nCharX;
-		UINT Style, ID;
-		int Size;
-		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO2 , ID, Style, Size);
-		if ( Size < Width )
-			m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO2, ID, Style, Width);
-
-        m_wndStatusBar.GetStatusBarCtrl ().SetText(m_strInfo2, NUM_INDICATOR_INFO2, SBT_OWNERDRAW );
-    }
-    LeaveCriticalSection(&secStatusSection);
-}
-
-void CMainFrame::OnUpdateInfo3(CCmdUI* pUI)
-{
-    EnterCriticalSection(&secStatusSection);
-    if ( m_strInfo3 != strInfo3  ) {
-        m_strInfo3 = strInfo3;
-
-		int Width = LengthWithoutANSI(m_strInfo3) * pDoc->m_nCharX;
-		UINT Style, ID;
-		int Size;
-		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO3 , ID, Style, Size);
-		if ( Size < Width )
-			m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO3, ID, Style, Width);
-
-        m_wndStatusBar.GetStatusBarCtrl ().SetText(m_strInfo3, NUM_INDICATOR_INFO3, SBT_OWNERDRAW );
-    }
-    LeaveCriticalSection(&secStatusSection);
-}
-
-void CMainFrame::OnUpdateInfo4(CCmdUI* pUI)
-{
-    EnterCriticalSection(&secStatusSection);
-    if ( m_strInfo4 != strInfo4  ) {
-        m_strInfo4 = strInfo4;
-
-		int Width = LengthWithoutANSI(m_strInfo4) * pDoc->m_nCharX;
-		UINT Style, ID;
-		int Size;
-		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO4 , ID, Style, Size);
-		if ( Size < Width )
-			m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO4, ID, Style, Width);
-
-        m_wndStatusBar.GetStatusBarCtrl ().SetText(m_strInfo4, NUM_INDICATOR_INFO4, SBT_OWNERDRAW );
-    }
-    LeaveCriticalSection(&secStatusSection);
-}
-
-void CMainFrame::OnUpdateInfo5(CCmdUI* pUI)
-{
-    EnterCriticalSection(&secStatusSection);
-    if ( m_strInfo5 != strInfo5  ) {
-        m_strInfo5 = strInfo5;
-
-		int Width = LengthWithoutANSI(m_strInfo5) * pDoc->m_nCharX;
-		UINT Style, ID;
-		int Size;
-		m_wndStatusBar.GetPaneInfo(NUM_INDICATOR_INFO5 , ID, Style, Size);
-		if ( Size < Width )
-			m_wndStatusBar.SetPaneInfo(NUM_INDICATOR_INFO5, ID, Style, Width);
-
-        m_wndStatusBar.GetStatusBarCtrl ().SetText(m_strInfo5, NUM_INDICATOR_INFO5, SBT_OWNERDRAW );
-    }
-    LeaveCriticalSection(&secStatusSection);
-}
-
 
 void CMainFrame::OnDestroy() 
 {
@@ -1498,34 +1429,20 @@ LONG CMainFrame::OnCleanInput(UINT wParam, LONG lParam)
     return m_editBar.CleanLine()?1:0;
 }
 
-LONG CMainFrame::OnUpdStat1(UINT wParam, LONG lParam)
+LONG CMainFrame::OnUpdStat(UINT wParam, LONG lParam)
 {
-	CMainFrame::OnUpdateInfo1(NULL);
+	int statNum = wParam;
+	CMainFrame::UpdateInfoParams();
+	CMainFrame::OnUpdateInfo(NULL);
 
 	return 1;
 }
 
-LONG CMainFrame::OnUpdStat2(UINT wParam, LONG lParam)
+LONG CMainFrame::OnUpdStatLayout(UINT wParam, LONG lParam)
 {
-	CMainFrame::OnUpdateInfo2(NULL);
-	return 1;
-}
+	CMainFrame::UpdateInfoParams();
+	m_wndStatusBar.ResetContents();
 
-LONG CMainFrame::OnUpdStat3(UINT wParam, LONG lParam)
-{
-	CMainFrame::OnUpdateInfo3(NULL);
-	return 1;
-}
-
-LONG CMainFrame::OnUpdStat4(UINT wParam, LONG lParam)
-{
-	CMainFrame::OnUpdateInfo4(NULL);
-	return 1;
-}
-
-LONG CMainFrame::OnUpdStat5(UINT wParam, LONG lParam)
-{
-	CMainFrame::OnUpdateInfo5(NULL);
 	return 1;
 }
 

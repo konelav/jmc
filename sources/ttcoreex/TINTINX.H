@@ -10,6 +10,7 @@
 //vls-begin// multiple output
 #define MAX_OUTPUT 10
 //vls-end//
+#define MAX_STATUS_NUM	10
 
 #define SUBST_ARRAY_SIZE		68
 #define BUFFER_SIZE				2048
@@ -121,11 +122,9 @@ extern int DLLEXPORT nScripterrorOutput;
 
 extern int DLLEXPORT MoreComingDelay;
 
-extern wchar_t DLLEXPORT strInfo1[BUFFER_SIZE];
-extern wchar_t DLLEXPORT strInfo2[BUFFER_SIZE];
-extern wchar_t DLLEXPORT strInfo3[BUFFER_SIZE];
-extern wchar_t DLLEXPORT strInfo4[BUFFER_SIZE];
-extern wchar_t DLLEXPORT strInfo5[BUFFER_SIZE];
+extern int DLLEXPORT infoCount;
+extern wchar_t DLLEXPORT strInfo[MAX_STATUS_NUM][BUFFER_SIZE];
+extern int DLLEXPORT infoSize[MAX_STATUS_NUM];
 extern CRITICAL_SECTION DLLEXPORT secStatusSection;
 
 extern wchar_t DLLEXPORT langfile[BUFFER_SIZE];

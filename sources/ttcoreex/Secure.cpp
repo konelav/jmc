@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include <winsock.h>
+#include <winsock2.h>
 #include "tintin.h"
 
 TLSType DLLEXPORT lTLSType;
@@ -9,8 +9,10 @@ static TLSType last_tls = TLS_DISABLED;
 static bool ssl_loaded = false;
 
 #pragma comment(lib, "wolfssl.lib")
-#include <wolfssl/ssl.h>
+#define BUILDING_WOLFSSL
+#define WOLFSSL_USER_SETTINGS
 #include <wolfssl/wolfcrypt/settings.h>
+#include <wolfssl/ssl.h>
 #include <wolfssl/wolfcrypt/asn_public.h>
 #include <wolfssl/wolfcrypt/error-crypt.h>
 
@@ -18,29 +20,70 @@ static WOLFSSL *ssl = NULL;
 static WOLFSSL_CTX *ctx = NULL;
 static WOLFSSL_X509_STORE *store = NULL;
 
+extern wchar_t MUDHostName[256];
+
+extern BOOL bSecureDebugEnabled;
+
+static void secure_log_msg(const int logLevel, const char *const logMessage) {
+	USES_CONVERSION;
+
+	if (!bSecureDebugEnabled)
+		return;
+	int n = strlen(logMessage);
+	wchar_t *wmsg = new wchar_t[n + 64];
+	wsprintf(wmsg, L"[wolfSSL:%d] %ls", logLevel, A2W(logMessage));
+	tintin_puts2(wmsg);
+	delete[] wmsg;
+}
+
 /*
  * syntax:
  * #secure
- * #secure [disable|enable|ssl3|tls1|tls1.1|tls1.2] {ca clear|<filename.pem>}
+ * #secure [disable|enable|ssl3|tls1|tls1.1|tls1.2|tls1.3] {ca clear|<filename.pem>}
  */
 void secure_command(wchar_t *arg) 
 {
     wchar_t param[BUFFER_SIZE], param2[BUFFER_SIZE];
 
+
 	while (arg && arg[0]) {
 		arg = get_arg_in_braces(arg,param,STOP_SPACES,sizeof(param)/sizeof(wchar_t)-1);
-		if (is_abrev(param, L"disable"))
+
+		if (is_abrev(param, L"debug")) {
+			arg = get_arg_in_braces(arg,param2,STOP_SPACES,sizeof(param2)/sizeof(wchar_t)-1);
+			if (wcslen(param2) ==0)
+				bSecureDebugEnabled = !bSecureDebugEnabled;
+			else if (!wcsicmp(param2, L"on"))
+				bSecureDebugEnabled = TRUE;
+			else
+				bSecureDebugEnabled = FALSE;
+
+			if (bSecureDebugEnabled)
+				wolfSSL_Debugging_ON();
+			else
+				wolfSSL_Debugging_OFF();
+
+			wchar_t tmp[BUFFER_SIZE];
+			swprintf(tmp, L"#secure: debug %ls",  //TODO rs
+				bSecureDebugEnabled ? L"ON" : L"OFF");
+			tintin_puts2(tmp);
+
+			break;
+		}
+		else if (is_abrev(param, L"disable"))
 			lTLSType = TLS_DISABLED;
 		else if (is_abrev(param, L"enable"))
-			lTLSType = TLS_TLS1;
+			lTLSType = TLS_TLS1_3;
 		else if (is_abrev(param, L"ssl3"))
 			lTLSType = TLS_SSL3;
 		else if (is_abrev(param, L"tls1"))
-			lTLSType = TLS_TLS1;
+			lTLSType = TLS_TLS1_3;
 		else if (is_abrev(param, L"tls1.1"))
 			lTLSType = TLS_TLS1_1;
 		else if (is_abrev(param, L"tls1.2"))
 			lTLSType = TLS_TLS1_2;
+		else if (is_abrev(param, L"tls1.3"))
+			lTLSType = TLS_TLS1_3;
 		else if (is_abrev(param, L"ca")) {
 			arg = get_arg_in_braces(arg,param2,STOP_SPACES,sizeof(param2)/sizeof(wchar_t)-1);
 			if (is_abrev(param2, L"clear"))
@@ -55,7 +98,8 @@ void secure_command(wchar_t *arg)
 		(lTLSType == TLS_SSL3     ? L"ssl3"   :
 	     lTLSType == TLS_TLS1     ? L"tls1"   :
 	     lTLSType == TLS_TLS1_1   ? L"tls1.1" :
-	     lTLSType == TLS_TLS1_2   ? L"tls1.2" : L"-"),
+		 lTLSType == TLS_TLS1_2   ? L"tls1.2" :
+	     lTLSType == TLS_TLS1_3   ? L"tls1.3" : L"-"),
 	    (strCAFile.size() > 0 ? strCAFile.c_str() : L"-"));
 	tintin_puts2(param);
 }
@@ -74,6 +118,7 @@ static int verify_cert(int preverify, WOLFSSL_X509_STORE_CTX* store)
 			tintin_puts2(rs::rs(1285));
 			return 0;
 		case ASN_NO_SIGNER_E:
+
 			if (strCAFile.size() > 0) {
 				tintin_puts2(rs::rs(1288));
 				return 0;
@@ -96,13 +141,15 @@ static int verify_cert(int preverify, WOLFSSL_X509_STORE_CTX* store)
 	if (strCAFile.size() > 0) {
 		wcscpy(fname, strCAFile.c_str());
 	} else {
-		swprintf(fname, L"%ls.pem", A2W(store->domain));
+		//swprintf(fname, L"%ls.pem", A2W(store->domain));
+		swprintf(fname, L"%ls.pem", MUDHostName);
 		MakeAbsolutePath(fpath, fname, szSETTINGS_DIR);
 	}
 
 	WOLFSSL_X509 *cert_local = wolfSSL_X509_load_certificate_file(W2A(fpath), SSL_FILETYPE_PEM);
 
-	swprintf(fname, L"%ls.pem", A2W(store->domain));
+	//swprintf(fname, L"%ls.pem", A2W(store->domain));
+	swprintf(fname, L"%ls.pem", MUDHostName);
 	MakeAbsolutePath(fpath, fname, szSETTINGS_DIR);
 
 	if (cert_local) {
@@ -119,7 +166,7 @@ static int verify_cert(int preverify, WOLFSSL_X509_STORE_CTX* store)
 			return 0;
 		}
 	} else {
-		char pem_buf[10 * 1024]; // should be ebough
+		char pem_buf[64 * 1024]; // should be enough
 		int len_remote;
 		const unsigned char *der_remote = wolfSSL_X509_get_der(cert_remote, &len_remote);
 
@@ -143,6 +190,12 @@ static int verify_cert(int preverify, WOLFSSL_X509_STORE_CTX* store)
 int tls_open(SOCKET sock) 
 {
 	USES_CONVERSION;
+
+	wolfSSL_SetLoggingCb(secure_log_msg);
+	if (bSecureDebugEnabled)
+		wolfSSL_Debugging_ON();
+	else
+		wolfSSL_Debugging_OFF();
 
 	last_tls = TLS_DISABLED;
 
@@ -174,6 +227,9 @@ int tls_open(SOCKET sock)
 	case TLS_TLS1_2:
 		method = wolfTLSv1_2_client_method();
 		break;
+	case TLS_TLS1_3:
+		method = wolfTLSv1_3_client_method();
+		break;
 	}
 	if (method == NULL) {
 		tintin_puts2(L"#ssl: can't create method");
@@ -187,10 +243,10 @@ int tls_open(SOCKET sock)
 		return -1;
 	}
 
-	wolfSSL_CTX_set_cipher_list(ctx, "DHE-PSK-AES128-GCM-SHA256");
-	wolfSSL_CTX_SetMinDhKey_Sz(ctx, 1024);
-
-	if (strCAFile.size() > 0) {
+	 if (strCAFile == L"none") {
+		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
+	 } else if (strCAFile.size() > 0) {
+		tintin_puts(strCAFile.c_str());
 		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0);
 		if (!wolfSSL_CTX_load_verify_locations(ctx, W2A(strCAFile.c_str()), NULL)) {
 			tintin_puts2(rs::rs(1290));
@@ -199,7 +255,6 @@ int tls_open(SOCKET sock)
 			return -1;
 		}
 	} else {
-		//wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
 		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, verify_cert);
 	}
 
@@ -232,8 +287,10 @@ int tls_open(SOCKET sock)
 		return -1;
 	}
 
+	wolfSSL_UseSNI(ssl, WOLFSSL_SNI_HOST_NAME, W2A(MUDHostName), strlen(W2A(MUDHostName)));
+
 	int dt = 20;
-	for (int timeout = 2000; timeout > 0; timeout -= dt) {
+	for (int timeout = 10000; timeout > 0; timeout -= dt) {
 		ret = wolfSSL_connect(ssl);
 
 		if (ret == SSL_SUCCESS)
@@ -269,6 +326,7 @@ int tls_send(SOCKET sock, const char *buffer, int length)
 	case TLS_TLS1:
 	case TLS_TLS1_1:
 	case TLS_TLS1_2:
+	case TLS_TLS1_3:
 		return wolfSSL_write(ssl, buffer, length);
 	}
 }
@@ -283,10 +341,20 @@ int tls_recv(SOCKET sock, char *buffer, int maxlength)
 	case TLS_TLS1:
 	case TLS_TLS1_1:
 	case TLS_TLS1_2:
+	case TLS_TLS1_3:
 		{
 			int ret = wolfSSL_read(ssl, buffer, maxlength);
-			if (ret <= 0)
-				ret = (wolfSSL_get_error(ssl, 0) ==  SSL_ERROR_WANT_READ) ? 0 : -1;
+			if (ret <= 0) {
+				int ssl_error = wolfSSL_get_error(ssl, 0);
+				if (ssl_error ==  SSL_ERROR_WANT_READ)
+					ret = 0;
+				else {
+					wchar_t msg[256];
+					swprintf(msg, L"#ssl error: %d", ssl_error);
+					tintin_puts(msg);
+					ret = -1;
+				}
+			}
 			return ret;
 		}
 	}
@@ -302,6 +370,7 @@ int tls_close(SOCKET sock)
 	case TLS_TLS1:
 	case TLS_TLS1_1:
 	case TLS_TLS1_2:
+	case TLS_TLS1_3:
 		wolfSSL_shutdown(ssl);
 		wolfSSL_free(ssl);
 		ssl = NULL;

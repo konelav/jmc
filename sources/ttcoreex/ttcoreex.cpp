@@ -14,11 +14,12 @@
 
 #include "ttcoreex_i.c"
 
-#include <winsock.h>
+#include <winsock2.h>
 #include "tintin.h"
 #include "JmcSite.h"
 #include "JmcObj.h"
 #include "telnet.h"
+#include "Proxy.h"
 
 UINT DLLEXPORT MudCodePage;
 UINT DLLEXPORT MudCodePageUsed;
@@ -91,13 +92,11 @@ BOOL DLLEXPORT bDisplayPing = TRUE;
 BOOL DLLEXPORT bMinimizeToTray = FALSE;
 UINT DLLEXPORT uBroadcastMessage = 0;
 
-wchar_t DLLEXPORT strInfo1[BUFFER_SIZE];
-wchar_t DLLEXPORT strInfo2[BUFFER_SIZE];
-wchar_t DLLEXPORT strInfo3[BUFFER_SIZE];
-wchar_t DLLEXPORT strInfo4[BUFFER_SIZE];
-wchar_t DLLEXPORT strInfo5[BUFFER_SIZE];
+wchar_t DLLEXPORT strInfo[MAX_STATUS_NUM][BUFFER_SIZE];
+int DLLEXPORT infoSize[MAX_STATUS_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 wchar_t DLLEXPORT editStr[BUFFER_SIZE];
 CRITICAL_SECTION DLLEXPORT secStatusSection;
+int DLLEXPORT infoCount = 5;
 
 HANDLE DLLEXPORT eventAllObjectEvent;
 
@@ -437,8 +436,8 @@ void output_command(wchar_t* arg)
 void write_line_mud(const wchar_t *line)
 {
     int len, OriginalLen;
-    char buff[BUFFER_SIZE*8], coded[BUFFER_SIZE*4];
-    int ret = 0;
+    char coded[BUFFER_SIZE*4];
+	int ret = 0;
 
     if ( !MUDSocket ) {
         tintin_puts(rs::rs(1182) );
@@ -457,34 +456,8 @@ void write_line_mud(const wchar_t *line)
 		} else {
 			count = WideCharToMultiByte(MudCodePageUsed, 0, &line[ret], len, coded, sizeof(coded) - 1, NULL, NULL);
 		}
-        
-		if ( bIACSendSingle ) 
-			memcpy (buff, coded, count);
-		else {
-			char* ptr = buff;
-			int nIACs = 0;
-			for ( int i = 0; i < count; i ++ ) {
-				if ( coded[i] == (char)0xff ) {
-					*ptr++ = (char)0xff;
-					nIACs ++;
-				}
-				*ptr++ = coded[i];
-			}
-			count += nIACs;
 
-		}
-		if ( buff[count-1] != 0xA ) {
-			buff[count] = 0xA;
-			buff[count+1] = 0;
-			count ++;
-		}
-
-		int sent = tls_send(MUDSocket, buff, count);
-
-		if (sent < 0)
-			ret = sent;
-		else
-			ret = len;
+		ret = telnet_send_command(coded, count);
     }
 
 //* en
@@ -518,17 +491,6 @@ void write_line_mud(const wchar_t *line)
 	bDaaMessage = FALSE;
 //* /en
 
-
-#ifdef _DEBUG_LOG
-    // --------   Write external log
-    if (hExLog ) {
-        char exLogText[128];
-        DWORD Written;
-        swprintf(exLogText , L"\r\n#SEND got %d bytes sent %d bytes#\r\n" , len, ret );
-        WriteFile(hExLog , exLogText , wcslen(exLogText) , &Written, NULL);
-        WriteFile(hExLog , buff , len , &Written, NULL);
-    }
-#endif
     if (  ret < 0 ) {
         tintin_puts2(rs::rs(1183) );
     }
@@ -550,7 +512,10 @@ unsigned long __stdcall ConnectThread(void * pParam)
     int connectresult;
     struct sockaddr_in sockaddr;
 
-    if(iswdigit(*strConnectAddress)) {                            /* interprete host part */
+	if (ulProxyAddress && dwProxyType == PROXY_HTTP) { /* let the proxy resolve address */
+		wcscpy(MUDHostName, strConnectAddress);
+		memset(&sockaddr, 0, sizeof(sockaddr));
+	} else if(iswdigit(*strConnectAddress)) {                            /* interprete host part */
         sockaddr.sin_addr.s_addr=inet_addr(W2A(strConnectAddress));
 
 		struct hostent *hp;
@@ -631,7 +596,7 @@ START1:
 
 	strLastCommand[0] = L'\0';
 
-    if(connectresult || tls_open(sock) < 0) {
+    if(connectresult || tls_open(sock) < 0 || telnet_init_session(sock) < 0) {
         proxy_close(sock);
         switch(connectresult) {
         case WSAECONNREFUSED:
@@ -737,14 +702,18 @@ unsigned long __stdcall PingThread(void * pParam)
 {
     CoInitialize ((void*)COINIT_MULTITHREADED);
 
-	int time_step_ms = 500;
+	int time_step_ms = 1000;
 
 	for(;;) {
 		int t0 = GetTickCount();
 
 		if (bDisplayPing) {
-			lPingMUD = ping_single_host(MUDAddress.sin_addr.s_addr, time_step_ms * 2);
-			lPingProxy = ping_single_host(htonl(ulProxyAddress), time_step_ms * 2);
+			if (bWebsocketEnabled && mWebsocketOptions.find(L"ping") != mWebsocketOptions.end()) {
+				// already set in telnet module?
+			} else {
+				lPingMUD = ping_single_host(MUDAddress.sin_addr.s_addr, time_step_ms);
+			}
+			lPingProxy = ping_single_host(htonl(ulProxyAddress), time_step_ms);
 		} else {
 			lPingMUD = lPingProxy = -4;
 		}
@@ -929,8 +898,7 @@ static void tick_func()
   if(lastT != iSecToTick)
   {//every SECOND
   //* en:status refresh
-	  for(int i=0;i<6;++i)
-  		  PostMessage(hwndMAIN, WM_USER+650+i, 0, 0);
+	PostMessage(hwndMAIN, WM_USER+650, 0, 0);
   }
   lastT=iSecToTick;
 
@@ -1311,6 +1279,9 @@ void DLLEXPORT ReadMud()
                 SetEvent(eventAllObjectEvent);
             }
 
+		if (bDisplayPing && bWebsocketEnabled && mWebsocketOptions.find(L"ping") != mWebsocketOptions.end()) {
+			send_websocket_ping(1000);
+		}
 
         FD_ZERO(&readfdmask);
         FD_SET(MUDSocket,&readfdmask);

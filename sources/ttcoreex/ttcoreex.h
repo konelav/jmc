@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Fri May 29 08:07:13 2026
+/* at Mon Jun 08 21:44:38 2026
  */
 /* Compiler settings for Q:\mud\jmc\sources\ttcoreex\ttcoreex.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -312,6 +312,10 @@ EXTERN_C const IID IID_IJmcObj;
             /* [optional][in] */ LONG Option,
             /* [optional][in] */ BSTR bstrData) = 0;
         
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE DoWebsocket( 
+            /* [in] */ LONG Opcode,
+            /* [optional][in] */ BSTR bstrData) = 0;
+        
         virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE ToText( 
             /* [in] */ BSTR bstrANSI,
             /* [retval][out] */ BSTR __RPC_FAR *bstrText) = 0;
@@ -513,6 +517,11 @@ EXTERN_C const IID IID_IJmcObj;
             /* [optional][in] */ LONG Option,
             /* [optional][in] */ BSTR bstrData);
         
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DoWebsocket )( 
+            IJmcObj __RPC_FAR * This,
+            /* [in] */ LONG Opcode,
+            /* [optional][in] */ BSTR bstrData);
+        
         /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *ToText )( 
             IJmcObj __RPC_FAR * This,
             /* [in] */ BSTR bstrANSI,
@@ -662,6 +671,9 @@ EXTERN_C const IID IID_IJmcObj;
 
 #define IJmcObj_DoTelnet(This,Command,Option,bstrData)	\
     (This)->lpVtbl -> DoTelnet(This,Command,Option,bstrData)
+
+#define IJmcObj_DoWebsocket(This,Opcode,bstrData)	\
+    (This)->lpVtbl -> DoWebsocket(This,Opcode,bstrData)
 
 #define IJmcObj_ToText(This,bstrANSI,bstrText)	\
     (This)->lpVtbl -> ToText(This,bstrANSI,bstrText)
@@ -1035,6 +1047,19 @@ void __RPC_STUB IJmcObj_wGetHeight_Stub(
 
 
 void __RPC_STUB IJmcObj_DoTelnet_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+/* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IJmcObj_DoWebsocket_Proxy( 
+    IJmcObj __RPC_FAR * This,
+    /* [in] */ LONG Opcode,
+    /* [optional][in] */ BSTR bstrData);
+
+
+void __RPC_STUB IJmcObj_DoWebsocket_Stub(
     IRpcStubBuffer *This,
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,

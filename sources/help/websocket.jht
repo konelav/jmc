@@ -1,0 +1,20 @@
+#websocket
+  shows websocket current options
+#websocket on|off
+  switches websocket protocol usage on/off
+#websocket <option>
+  shows status of specified websocket option
+  currently (at least partially) implemented options are:
+    'single-iac': do not handle IAC inside websocket messages (note that websocket layer works before telnet)
+    'no-cr': do not append CR to the end of user input in websocket messages
+    'message-prompt': append end-of-prompt mark to the end of server's messages
+    'ping': use websocket ping-ping message to measure connection latency (if enabled in JMC settings)
+    'permessage-deflate': use permessage-deflate websocket option if supported by server
+    'Host', 'Origin', 'User-Agent': use provided headers when establishing websocket connection
+      (by default, 'Host' and 'Origin' will be set to MUD hostname or IP address, and 'User-Agent' to JMC)
+#websocket <option> enable|disable
+  turns on/off specified websocket option
+#websocket <option> <value>
+  sets value for specified websocket option, if applicable (for e.g. 'Host', 'Origin', 'User-Agent')
+#websocket debug [on|off]
+  turns on/off or switches websocket debugging messages

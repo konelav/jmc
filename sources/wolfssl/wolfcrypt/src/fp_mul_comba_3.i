@@ -1,12 +1,12 @@
 /* fp_mul_comba_3.i
  *
- * Copyright (C) 2006-2016 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
  * wolfSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * wolfSSL is distributed in the hope that it will be useful,
@@ -22,12 +22,12 @@
 
 
 #ifdef TFM_MUL3
-void fp_mul_comba3(fp_int *A, fp_int *B, fp_int *C)
+int fp_mul_comba3(fp_int *A, fp_int *B, fp_int *C)
 {
    fp_digit c0, c1, c2, at[6];
 
-   memcpy(at, A->dp, 3 * sizeof(fp_digit));
-   memcpy(at+3, B->dp, 3 * sizeof(fp_digit));
+   XMEMCPY(at, A->dp, 3 * sizeof(fp_digit));
+   XMEMCPY(at+3, B->dp, 3 * sizeof(fp_digit));
    COMBA_START;
 
    COMBA_CLEAR;
@@ -55,5 +55,7 @@ void fp_mul_comba3(fp_int *A, fp_int *B, fp_int *C)
    C->sign = A->sign ^ B->sign;
    fp_clamp(C);
    COMBA_FINI;
+
+   return FP_OKAY;
 }
 #endif

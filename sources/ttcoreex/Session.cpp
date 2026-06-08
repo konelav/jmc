@@ -60,6 +60,7 @@ void  newactive_session()
 /*****************************************************************************/
 void cleanup_session(void)
 {
+	telnet_close_session();
 	tls_close(MUDSocket);
     proxy_close(MUDSocket);
     MUDSocket = NULL;
