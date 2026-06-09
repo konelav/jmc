@@ -211,7 +211,6 @@ void CJmcHlightPage::OnSelchangeGroups()
 void CJmcHlightPage::OnItemchangedHlight(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
-	// TODO: Add your control notification handler code here
     if ( !(LVIF_STATE & pNMListView->uChanged) /*|| !(pNMListView->uNewState & LVNI_SELECTED) */)
         return;
     SetControls();

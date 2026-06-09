@@ -57,8 +57,6 @@ BOOL CAnsiColorsDlg::OnInitDialog()
 
 void CAnsiColorsDlg::OnRestoreDefault() 
 {
-	// TODO: Add your control notification handler code here
-	    
     int i;
     for ( i = 0 ; i < 16 ; i++ ) 
 	{

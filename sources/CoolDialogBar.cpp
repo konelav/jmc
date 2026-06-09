@@ -821,7 +821,6 @@ void CCoolDialogBar::DrawGripper(CDC & dc)
 void CCoolDialogBar::OnNcLButtonDblClk(UINT nHitTest, CPoint point) 
 {
     //MessageBox("ncldbl", "JMC", MB_OK | MB_ICONSTOP);
-	// TODO: Add your message handler code here and/or call default
     if ((m_pDockBar != NULL) && (nHitTest == HTCAPTION))
     {
         // toggle docking

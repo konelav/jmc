@@ -428,6 +428,7 @@ void display_info(wchar_t*arg)
 void status_command(wchar_t* arg)
 {
     wchar_t left[BUFFER_SIZE], right[BUFFER_SIZE], color[BUFFER_SIZE];
+	wchar_t msg[BUFFER_SIZE];
     
     arg=get_arg_in_braces(arg,left,STOP_SPACES,sizeof(left)/sizeof(wchar_t)-1);
 
@@ -437,12 +438,13 @@ void status_command(wchar_t* arg)
 		arg=get_arg_in_braces(arg,right,STOP_SPACES,sizeof(right)/sizeof(wchar_t)-1);
 
 		if (!*right || !iswdigit(*right)) {
-			tintin_puts2(L"#status count: no count param"); // TODO rs
+			tintin_puts2(rs::rs(1342));
 			return;
 		}
 		int statCnt = _wtoi(right);
 		if (statCnt < 0 || statCnt > MAX_STATUS_NUM) {
-			tintin_puts2(L"#status count: wront count param"); // TODO rs
+			swprintf(msg, rs::rs(1343), MAX_STATUS_NUM);
+			tintin_puts2(msg);
 			return;
 		}
 
@@ -455,11 +457,13 @@ void status_command(wchar_t* arg)
 		if (*right && iswdigit(*right)) {
 			statNum = _wtoi(right);
 			if ( statNum < 1 || statNum > MAX_STATUS_NUM ) {
-				tintin_puts2(rs::rs(1137));
+				swprintf(msg, rs::rs(1344), MAX_STATUS_NUM);
+				tintin_puts2(msg);
 				return;
 			}
 		} else if (!is_abrev(right, L"all")) {
-			tintin_puts2(L"#status size: wrong status number");  //TODO rs
+			swprintf(msg, rs::rs(1344), MAX_STATUS_NUM);
+			tintin_puts2(msg);
 			return;
 		}
 		
@@ -471,7 +475,7 @@ void status_command(wchar_t* arg)
 		else if (is_abrev(color, L"auto"))
 			size = 0;
 		else {
-			tintin_puts2(L"#status size: wrong size param"); // TODO rs
+			tintin_puts2(rs::rs(1345));
 			return;
 		}
 		if (statNum > 0)

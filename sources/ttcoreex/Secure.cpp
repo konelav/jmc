@@ -64,7 +64,7 @@ void secure_command(wchar_t *arg)
 				wolfSSL_Debugging_OFF();
 
 			wchar_t tmp[BUFFER_SIZE];
-			swprintf(tmp, L"#secure: debug %ls",  //TODO rs
+			swprintf(tmp, rs::rs(1346),
 				bSecureDebugEnabled ? L"ON" : L"OFF");
 			tintin_puts2(tmp);
 

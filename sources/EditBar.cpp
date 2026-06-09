@@ -551,7 +551,6 @@ void CEditBar::DoPaste()
 
 BOOL CEditBar::OnHelpInfo(HELPINFO* pHelpInfo) 
 {
-	// TODO: Add your message handler code here and/or call default
 	
 	// return CDialogBar::OnHelpInfo(pHelpInfo);
     return TRUE;

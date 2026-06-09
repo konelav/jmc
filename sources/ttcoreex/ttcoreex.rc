@@ -698,6 +698,23 @@ BEGIN
     1339                    "#FORMAT: #userinput disable|prompt|newline"
     IDS_STRING1340          "#event %ls %ls"
     IDS_STRING1341          "#mccp decompression error"
+    IDS_STRING1342          "#status count: specify number of status fields"
+    IDS_STRING1343          "#status count: number of status fields must be between 0 and %d"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING1344          "#status size: number of status field must be between 1 and %d"
+    IDS_STRING1345          "#status size: size must be 'auto', 'fit' or number of characters"
+    IDS_STRING1346          "#secure debug %ls"
+    IDS_STRING1347          "#websocket %ls, options: %ls"
+    IDS_STRING1348          "#websocket debug %ls"
+    IDS_STRING1349          "#websocket %ls"
+    IDS_STRING1350          "#websocket: unexpected server reply"
+    IDS_STRING1351          "#websocket: wrong headers in server reply"
+    IDS_STRING1352          "#websocket option '%ls' disabled"
+    IDS_STRING1353          "#websocket option '%ls' enabled"
+    IDS_STRING1354          "#websocket option '%ls' set to '%ls'"
 END
 
 #endif    // English (U.S.) resources

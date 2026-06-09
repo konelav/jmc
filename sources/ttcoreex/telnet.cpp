@@ -449,8 +449,8 @@ void websocket_command(wchar_t *arg)
 				}
 			}
 		}
-		swprintf(msg, L"#websocket status: %ls, options: %ls",
-			bWebsocketEnabled ? L"ON" : L"OFF", options); // TODO rs::rs
+		swprintf(msg, rs::rs(1347),
+			bWebsocketEnabled ? L"ON" : L"OFF", options);
 	} else if ( is_abrev(option, L"debug") ) {
 		if ( wcslen(flag) ==0 )
 			bWebsocketDebugEnabled = !bWebsocketDebugEnabled;
@@ -459,12 +459,11 @@ void websocket_command(wchar_t *arg)
 		else
 			bWebsocketDebugEnabled = FALSE;
 
-		swprintf(msg, L"#websocket debug: %ls",  //TODO rs::rs
+		swprintf(msg, rs::rs(1348),
 			bWebsocketDebugEnabled ? L"ON" : L"OFF");
 	} else if ( is_abrev(option, L"on") || is_abrev(option, L"off") ) {
 		bWebsocketEnabled = is_abrev(option, L"on");
-		swprintf(msg, L"#websocket protocol: %ls", option,  //TODO rs::rs
-			bWebsocketEnabled ? L"ON" : L"OFF");
+		swprintf(msg, rs::rs(1349), bWebsocketEnabled ? L"ON" : L"OFF");
 		
 	} else {
 		if ( wcslen(flag) ) {
@@ -472,23 +471,23 @@ void websocket_command(wchar_t *arg)
 				std::map<wstring,wstring>::iterator it = mWebsocketOptions.find(option);
 				if (it != mWebsocketOptions.end())
 					mWebsocketOptions.erase(it);
-				swprintf(msg, L"#websocket option '%ls' disabled", option);
+				swprintf(msg, rs::rs(1352), option);
 			} else if ( !wcsicmp(flag, L"enable") ) {
 				mWebsocketOptions[option] = val;
 				if (!wcslen(val))
-					swprintf(msg, L"#websocket option '%ls' enabled", option);
+					swprintf(msg, rs::rs(1353), option);
 				else
-					swprintf(msg, L"#websocket option '%ls' set to '%ls'", option, val);
+					swprintf(msg, rs::rs(1354), option, val);
 			} else {
 				mWebsocketOptions[option] = flag;
-				swprintf(msg, L"#websocket option '%ls' set to '%ls'", option, flag);
+				swprintf(msg, rs::rs(1354), option, flag);
 			}
 		} else {
 			std::map<wstring,wstring>::iterator it = mWebsocketOptions.find(option);
 			if (it == mWebsocketOptions.end())
-				swprintf(msg, L"#websocket option '%ls' disabled", option);
+				swprintf(msg, rs::rs(1352), option);
 			else
-				swprintf(msg, L"#websocket option '%ls' set to '%ls'", option, it->second.c_str());
+				swprintf(msg, rs::rs(1354), option, it->second.c_str());
 		}
 	}
 
@@ -556,7 +555,7 @@ int send_websocket_frame(int opcode, const char *data, unsigned int count)
 	if (!bRet)
 		return 0;
 
-	//TODO: copy pJmcObj->m_pvarEventParams[2].bstrVal to data
+	// TODO: copy pJmcObj->m_pvarEventParams[2].bstrVal to data
 
 	if (SocketFlags & SOCKWSCOMPRESS) {
 		RSV1 = true;
@@ -1650,7 +1649,7 @@ int telnet_init_session(int sock) {
 			return -1;
 
 		if (strncmp(buf, "HTTP/1.1 101 ", strlen("HTTP/1.1 101 "))) {
-			tintin_puts(L"#websocket: unexpected server reply"); //TODO rs::rs
+			tintin_puts(rs::rs(1350));
 			if (bWebsocketDebugEnabled) {
 				tintin_puts(A2W(buf));
 			}
@@ -1690,7 +1689,7 @@ int telnet_init_session(int sock) {
 
 		if (headers.find("connection") == headers.end() || stricmp(headers["connection"].c_str(), "upgrade") ||
 			headers.find("upgrade") == headers.end() || stricmp(headers["upgrade"].c_str(), "websocket")) {
-			tintin_puts(L"#websocket: wrong headers in server reply"); //TODO rs::rs
+			tintin_puts(rs::rs(1351));
 			return -1;
 		}
 		if (headers.find("sec-websocket-extensions") != headers.end()) {
