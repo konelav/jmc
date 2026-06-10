@@ -98,21 +98,20 @@ CSize CJMCStatus::CalcFixedLayout(BOOL bStretch, BOOL bHorz) {
 }
 
 void CJMCStatus::ResetContents() {
-	for (int i = 0; i < MAX_STATUS_NUM; i++)
+	int i;
+	for (i = 0; i < MAX_STATUS_NUM; i++) {
 		m_StatusDrawn[i] = m_StatusSet[i] + L' ';
+		m_StatusSizeDrawn[i] = m_StatusSizeSet[i] + 1;
+	}
 }
 
 bool CJMCStatus::SetStatus(int StatusNum, const CString &Value) {
 	if (!(1 <= StatusNum && StatusNum <= MAX_STATUS_NUM))
 		return false;
-	if (m_StatusDrawn[StatusNum-1] == Value && m_StatusSet[StatusNum-1] == Value)
-		return false;
 
 	CSmcDoc* pDoc = (CSmcDoc*) (((CMainFrame*)AfxGetMainWnd())->GetActiveDocument());
     if (!pDoc) 
         return false;
-
-	m_StatusSet[StatusNum-1] = Value;
 
 	if (StatusNum <= infoCount) {
 		int Width = LengthWithoutANSI(Value) * pDoc->m_nCharX;
@@ -129,9 +128,17 @@ bool CJMCStatus::SetStatus(int StatusNum, const CString &Value) {
 		else if (infoSize[StatusNum-1] > 0)
 			SetSize = infoSize[StatusNum-1] * pDoc->m_nCharX;
 
-		if (Size != SetSize)
+		m_StatusSizeSet[StatusNum-1] = SetSize;
+
+		//if (Size != SetSize)
 			SetPaneInfo(num_id, ID, Style, SetSize);
 	}
+
+	if (m_StatusDrawn[StatusNum-1] == Value && m_StatusSet[StatusNum-1] == Value &&
+		m_StatusSizeDrawn[StatusNum-1] == m_StatusSizeSet[StatusNum-1])
+		return false;
+
+	m_StatusSet[StatusNum-1] = Value;
 
 	return true;
 }
@@ -303,6 +310,7 @@ void CJMCStatus::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	if (NUM_INDICATOR_INFO1 <= lpDrawItemStruct->itemID && lpDrawItemStruct->itemID < NUM_INDICATOR_INFO1+infoCount) {
 		int num_id = lpDrawItemStruct->itemID - NUM_INDICATOR_INFO1;
 		const wchar_t *txt = m_StatusDrawn[num_id] = m_StatusSet[num_id];
+		m_StatusSizeDrawn[num_id] = m_StatusSizeSet[num_id];
 		DrawColoredText(lpDrawItemStruct, txt);
 		return;
 	}
@@ -1442,6 +1450,8 @@ LONG CMainFrame::OnUpdStatLayout(UINT wParam, LONG lParam)
 {
 	CMainFrame::UpdateInfoParams();
 	m_wndStatusBar.ResetContents();
+	for (int i = 0; i < infoCount; i++)
+		m_wndStatusBar.GetStatusBarCtrl().SetText(0, NUM_INDICATOR_INFO1 + i, SBT_OWNERDRAW );
 
 	return 1;
 }

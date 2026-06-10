@@ -81,6 +81,8 @@ protected:
     CBitmap m_bmpConnected, m_bmpLogged, m_bmpMarked;
 	CString m_StatusSet[MAX_STATUS_NUM];
 	CString m_StatusDrawn[MAX_STATUS_NUM];
+	int m_StatusSizeSet[MAX_STATUS_NUM];
+	int m_StatusSizeDrawn[MAX_STATUS_NUM];
 
 protected:
 	int m_nYsize;
