@@ -108,7 +108,14 @@ typedef struct
 #define WS_OPCODE_PING		9
 #define WS_OPCODE_PONG		10
 
-#define WS_COMPRESS_EXT		L"permessage-deflate"
+#define WS_OPTIONS_NUM		12
+typedef struct
+{
+	const wchar_t *Name;
+	bool default_value;
+	const wchar_t *Descr;
+} WebsocketOption;
+
 
 #define ZLIB_DLL
 #include "zlib.h"

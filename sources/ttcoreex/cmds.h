@@ -135,6 +135,7 @@ jmc_cmdi jmc_cmds[JMC_CMDS_NUM]={
 		   {L"codepage", &codepage_command, L"\0"},
 		   {L"bar", &bar_command, L"\0"},
 		   {L"oob", &oob_command, L"\0"},
-		   {L"mapper", &mapper_command, L"\0"}
+		   {L"mapper", &mapper_command, L"\0"},
+		   {L"base64", &base64_command, L"\0"}
 	   };
 #endif

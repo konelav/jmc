@@ -801,7 +801,8 @@ BOOL CSmcDoc::DoProfileSave()
 	}
 	
 	if ( m_strDefSaveFile.GetLength() ) {
-		strInput += cCommandDelimiter;
+		if (strInput.GetLength())
+			strInput += cCommandDelimiter;
 		strInput += cCommandChar;
 		strInput += "write ";
 //vls-begin// 

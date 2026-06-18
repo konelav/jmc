@@ -1371,31 +1371,81 @@ void autoreconnect_command(wchar_t*arg)
 }
 
 //* /en
-int base64_encode(char *dst, int capacity, const char *src, int size) {
-	static const char codes[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char b64_encodes[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+static char b64_decodes[256] = {-128};
 
+int base64_encode(char *dst, int capacity, const char *src, int size) {
 	int written = 0;
 	unsigned int data = 0, datalen = 0;
 	while (written < capacity - 1 && size > 0) {
-		data = (data << 8) | (unsigned int)(*src++);
+		data = (data << 8) | (unsigned char)(*src++);
 		datalen += 8;
 		size--;
 		while (datalen >= 6 && written < capacity - 1) {
 			datalen -= 6;
-			dst[written++] = codes[(data >> datalen) & 0x3F];
+			dst[written++] = b64_encodes[(data >> datalen) & 0x3F];
 		}
 	}
 	char tail[4], taillen = 0;
 	if (datalen > 0) { // 2 or 4
 		data <<= (6 - datalen);
-		tail[taillen++] = codes[data & 0x3F];
-		tail[taillen++] = '=';
+		tail[taillen++] = b64_encodes[data & 0x3F];
+		tail[taillen++] = b64_encodes[0x40];
 		if (datalen == 2)
-			tail[taillen++] = '=';
+			tail[taillen++] = b64_encodes[0x40];
 	}
 	for (int i = 0; i < taillen && written < capacity - 1; i++)
 		dst[written++] = tail[i];
 
 	dst[written] = '\0';
 	return written;
+}
+
+int base64_decode(char *dst, int capacity, const char *src, int size) {
+	if (b64_decodes[0] == -128) {
+		memset(b64_decodes, -1, sizeof(b64_decodes));
+		for (int i = 0; i <= strlen(b64_encodes); i++)
+			b64_decodes[b64_encodes[i]] = i;
+	}
+
+	int written = 0;
+	unsigned int data = 0, datalen = 0;
+	while (written < capacity - 1 && size > 0) {
+		char chunk = b64_decodes[*src];
+		if (chunk >= 0 && chunk <= 0x3F) {
+			data = (data << 6) | (unsigned char)chunk;
+			datalen += 6;
+		} else if (src[0] == b64_encodes[0x40]) {
+			break;
+		}
+		src++;
+		size--;
+		
+		while (datalen >= 8 && written < capacity - 1) {
+			datalen -= 8;
+			dst[written++] = (data >> datalen) & 0xFF;
+			data &= (1 << (datalen+1)) - 1;
+		}
+	}
+
+	dst[written] = '\0';
+	return written;
+}
+
+void base64_command(wchar_t *arg) {
+	USES_CONVERSION;
+
+	wchar_t direction[BUFFER_SIZE], buf[BUFFER_SIZE];
+	char input[BUFFER_SIZE], output[BUFFER_SIZE];
+
+	arg = get_arg_in_braces(arg,direction,STOP_SPACES,sizeof(direction)/sizeof(wchar_t)-1);
+    arg = get_arg_in_braces(arg,buf,WITH_SPACES,sizeof(buf)/sizeof(wchar_t)-1);
+
+	strcpy(input, W2A(buf));
+	if (!wcscmp(direction, L"encode")) {
+		base64_encode(output, sizeof(output), input, strlen(input));
+	} else if (!wcscmp(direction, L"decode")) {
+		base64_decode(output, sizeof(output), input, strlen(input));
+	}
+	tintin_puts2(A2W(output));
 }

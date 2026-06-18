@@ -10,6 +10,8 @@
 #include <map>
 #include <vector>
 
+using namespace std;
+
 const TelnetOption TelnetOptions[TELNET_OPTIONS_NUM] = {
 	{TN_BINARY,    L"BINARY",L"Binary data stream"},
 	{TN_EOR_OPT,   L"EOR",   L"End-of-record"},							/* should be controlled by JMC */
@@ -29,13 +31,35 @@ const TelnetOption TelnetOptions[TELNET_OPTIONS_NUM] = {
 	{TN_CHARSET,   L"CHARSET",L"Character set selection"}				/* should be controlled by JMC */
 };
 
-std::vector<unsigned int> vEnabledTelnetOptions;
-std::vector<char> SubnegotiationBuffer;
-std::map<wstring,wstring> mWebsocketOptions;
+vector<unsigned int> vEnabledTelnetOptions;
+vector<char> SubnegotiationBuffer;
+
+const WebsocketOption WebsocketOptions[WS_OPTIONS_NUM] = {
+	{L"send-input-base64",			false, L"Encode user input with base64"},
+	{L"send-input-binary",			false, L"Use BINARY opcode when sending user input"},
+	{L"send-input-add-cr",			true,  L"Append CR to the user input"},
+	{L"send-telnet-base64",			false, L"Encode telnet commands with base64"},
+	{L"send-telnet-binary",			true,  L"Use BINARY opcode when sending telnet commands"},
+	{L"recv-text-base64",			false, L"Decode received TEXT opcodes with base64"},
+	{L"recv-text-base64-inflate",	false, L"Decode received TEXT opcodes with base64 and then inflate with zlib"},
+	{L"recv-binary-inflate",		false, L"Inflate recevied BINARY opcodes with zlib"},
+	{L"recv-text-prompt",			true,  L"Add end-of-prompt mark after each of TEXT message"},
+	{L"recv-binary-prompt",			false, L"Add end-of-prompt mark after each of BINARY message"},
+	{L"ping",						true,  L"Use PING/PONG opcodes to measure RTT delay (if enabled in settings)"},
+	{L"permessage-deflate",			true,  L"Use permessage-deflate websocket option"}
+};
+
+map<wstring,bool> mWebsocketOptions;
+map<wstring,wstring> mWebsocketHeaders;
+wstring sWebsocketPath = L"/";
+
 
 extern GET_WNDSIZE_FUNC GetWindowSize;
 extern CComObject<CJmcObj>* pJmcObj;
 extern wchar_t MUDHostName[256];
+extern unsigned short MUDHostPort;
+
+static int send_to_transport(char *buf, int nbytes, bool telnet_command);
 
 int get_telnet_option_num(const wchar_t *name)
 {
@@ -194,7 +218,7 @@ void send_telnet_command(unsigned char cmd, int opt)
 	if (opt >= 0)
 		szBuf[len++] = (char)opt;
 
-	tls_send(MUDSocket, szBuf, len);
+	send_to_transport(szBuf, len, true);
     
 	TelnetMsg(L"send", cmd, opt);
 
@@ -220,6 +244,17 @@ static void RecvCmd(int cmd, int opt = -1)
 		
 		BOOL bRet = pJmcObj->Fire_Telnet();
 		if ( bRet ) {
+		}
+	}
+}
+
+void increase_capacity(char **ppBuf, int *capacity, int needed) {
+	if (needed > *capacity) {
+		int newcap = needed + BUFFER_SIZE;
+		char *newptr = (char*)realloc(*ppBuf, newcap);
+		if (newptr) {
+			*capacity = newcap;
+			*ppBuf = newptr;
 		}
 	}
 }
@@ -261,10 +296,12 @@ static void do_decompressing(const char *src, int size, int *used, char *dst, in
 
     int ret = inflate(&mccp_stream, Z_SYNC_FLUSH);
     switch (ret) {
+		case Z_ERRNO:
 		case Z_STREAM_ERROR:
-        case Z_NEED_DICT:
         case Z_DATA_ERROR:
         case Z_MEM_ERROR:
+		case Z_BUF_ERROR:
+		case Z_VERSION_ERROR:
 			ret = Z_DATA_ERROR;
 			break;
     }
@@ -272,69 +309,125 @@ static void do_decompressing(const char *src, int size, int *used, char *dst, in
 	*used = size - mccp_stream.avail_in;
 	*decompressed = capacity - mccp_stream.avail_out;
 
-	if (ret != Z_OK) {
+	if (ret < 0) {
 		tintin_puts2(rs::rs(1341));
 		stop_decompressing();
 	}
 }
 
+static bool ws_compression_inited = false;
 static void init_ws_compression()
 {
-	if(!(SocketFlags & SOCKWSCOMPRESS)) {
-		ws_stream_in.zalloc = Z_NULL;
-		ws_stream_in.zfree = Z_NULL;
-		ws_stream_in.opaque = Z_NULL;
-		ws_stream_in.avail_in = 0;
-		ws_stream_in.next_in = Z_NULL;
-		int ret = inflateInit(&ws_stream_in);
-		if (ret != Z_OK) {
-			tintin_puts(L"websocket: error while initializing decompression");
-		}
-
-		ws_stream_out.zalloc = Z_NULL;
-		ws_stream_out.zfree = Z_NULL;
-		ws_stream_out.opaque = Z_NULL;
-		ws_stream_out.avail_in = 0;
-		ws_stream_out.next_in = Z_NULL;
-		ret = deflateInit(&ws_stream_out, Z_DEFAULT_COMPRESSION);
-		if (ret != Z_OK) {
-			tintin_puts(L"websocket: error while initializing compression");
-		}
+	if (ws_compression_inited) {
+		inflateReset(&ws_stream_in);
+		deflateReset(&ws_stream_out);
+		return;
 	}
-	SocketFlags |= SOCKWSCOMPRESS;
+
+	ws_stream_in.zalloc = Z_NULL;
+	ws_stream_in.zfree = Z_NULL;
+	ws_stream_in.opaque = Z_NULL;
+	ws_stream_in.avail_in = 0;
+	ws_stream_in.next_in = Z_NULL;
+	int ret = inflateInit(&ws_stream_in);
+	if (ret != Z_OK) {
+		tintin_puts(L"websocket: error while initializing decompression");
+	}
+
+	ws_stream_out.zalloc = Z_NULL;
+	ws_stream_out.zfree = Z_NULL;
+	ws_stream_out.opaque = Z_NULL;
+	ws_stream_out.avail_in = 0;
+	ws_stream_out.next_in = Z_NULL;
+	ret = deflateInit(&ws_stream_out, Z_DEFAULT_COMPRESSION);
+	if (ret != Z_OK) {
+		tintin_puts(L"websocket: error while initializing compression");
+	}
+
+	ws_compression_inited = true;
 }
 static void deinit_ws_compression()
 {
-	if(SocketFlags & SOCKWSCOMPRESS) {
+	if(ws_compression_inited) {
 		inflateEnd(&ws_stream_in);
 		deflateEnd(&ws_stream_out);
-		SocketFlags &= ~SOCKWSCOMPRESS;
+		ws_compression_inited = false;
 	}
+	SocketFlags &= ~SOCKWSCOMPRESS;
 }
-static void do_ws_decompression(const char *src, int size, int *used, char *dst, int capacity, int *decompressed)
+static bool do_ws_decompression(char *src, int size, int *used, char **pdst, int *pdecompressed)
 {
-	ws_stream_in.avail_in = size;
-	ws_stream_in.next_in = (unsigned char*)src;
-	ws_stream_in.avail_out = capacity;
-    ws_stream_in.next_out = (unsigned char*)dst;
+	bool ret = true;
 
-    int ret = inflate(&ws_stream_in, Z_SYNC_FLUSH);
-    switch (ret) {
-		case Z_STREAM_ERROR:
-        case Z_NEED_DICT:
-        case Z_DATA_ERROR:
-        case Z_MEM_ERROR:
-			ret = Z_DATA_ERROR;
+	int capacity = size * 2 + 64;
+	int decompressed = 0;
+	char *dst = (char*)malloc(capacity);
+	inflateReset(&ws_stream_in);
+
+	bool free_src = false;
+	if (size < 2 || src[0] != '\x78' || src[1] != '\x9C') { // missed zlib-stream header
+		char *zlib_src = (char*)malloc(size + 2);
+		zlib_src[0] = '\x78';
+		zlib_src[1] = '\x9C';
+		memcpy(zlib_src + 2, src, size);
+		src = zlib_src;
+		size += 2;
+		free_src = true;
+
+	}
+
+	for (int offset = 0; ; ) {
+		ws_stream_in.avail_in = size - offset;
+		ws_stream_in.next_in = (unsigned char*)src + offset;
+		ws_stream_in.avail_out = capacity - decompressed;
+		ws_stream_in.next_out = (unsigned char*)dst + decompressed;
+
+		int zret = inflate(&ws_stream_in, Z_SYNC_FLUSH);
+		switch (zret) {
+			case Z_ERRNO:
+			case Z_STREAM_ERROR:
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+			case Z_VERSION_ERROR:
+				ret = false;
+				break;
+			case Z_BUF_ERROR:
+				break;
+		}
+
+		if (!ret)
 			break;
-    }
 
-	*used = size - ws_stream_in.avail_in;
-	*decompressed = capacity - ws_stream_in.avail_out;
+		int used_in = (size - offset) - ws_stream_in.avail_in;
+		int used_out = (capacity - decompressed) - ws_stream_in.avail_out;
 
-	if (ret != Z_OK) {
-		tintin_puts2(rs::rs(1341));
+		offset += used_in;
+		decompressed += used_out;
+
+		if (offset < size || capacity < decompressed + 64) {
+			if (!used_in && !used_out) {
+				tintin_puts(L"#websocket: can't decompress rest of the bytes");
+				ret = false;
+				break;
+			}
+			increase_capacity(&dst, &capacity, decompressed + (size - offset)*2 + 256);
+		} else if (!used_in)
+			break;
+	}
+
+	if (free_src)
+		free(src);
+
+	*pdst = dst;
+	*pdecompressed = decompressed;
+	*used = offset;
+
+	if (!ret) {
+		tintin_puts2(rs::rs(1356));
 		deinit_ws_compression();
 	}
+
+	return ret;
 }
 static void do_ws_compression(const char *src, int size, int *used, char *dst, int capacity, int *compressed)
 {
@@ -357,7 +450,7 @@ static void do_ws_compression(const char *src, int size, int *used, char *dst, i
 	*compressed = capacity - ws_stream_out.avail_out;
 
 	if (ret != Z_OK) {
-		tintin_puts2(rs::rs(1341));
+		tintin_puts2(rs::rs(1355));
 		deinit_ws_compression();
 	}
 }
@@ -396,6 +489,12 @@ void telnet_command(wchar_t *arg)
 		swprintf(tmp, rs::rs(1267), option,
 			bTelnetDebugEnabled ? L"ON" : L"OFF");
 			tintin_puts2(tmp);
+	} else if ( is_abrev(option, L"list") ) {
+		tintin_puts2(rs::rs(1357));
+		for(int i = 0; i < TELNET_OPTIONS_NUM; i++) {
+			swprintf(tmp, L"#   %ls (0x%02x) - %ls", TelnetOptions[i].Name, TelnetOptions[i].Code, TelnetOptions[i].Descr);
+			tintin_puts2(tmp);
+		}
 	} else {
 		int opt = get_telnet_option_num(option);
 		if(opt < 0) {
@@ -424,6 +523,32 @@ void telnet_command(wchar_t *arg)
 	}
 }
 
+static void init_websocket_options()
+{
+	if (mWebsocketOptions.size() == 0) {
+		for (int i = 0; i < WS_OPTIONS_NUM; i++)
+			mWebsocketOptions[WebsocketOptions[i].Name] = WebsocketOptions[i].default_value;
+	}
+}
+
+bool check_websocket_option(const wchar_t *Name) {
+	map<wstring,bool>::iterator it = mWebsocketOptions.find(Name);
+	if (it == mWebsocketOptions.end()) {
+		init_websocket_options();
+		it = mWebsocketOptions.find(Name);
+		if (it == mWebsocketOptions.end())
+			return false;
+	}
+	return it->second;
+}
+
+bool default_websocket_option(const wchar_t *Name) {
+	for (int i = 0; i < WS_OPTIONS_NUM; i++)
+		if (!wcscmp(Name, WebsocketOptions[i].Name))
+			return WebsocketOptions[i].default_value;
+	return false;
+}
+
 void websocket_command(wchar_t *arg) 
 {
 	wchar_t option[BUFFER_SIZE], flag[BUFFER_SIZE], val[BUFFER_SIZE], msg[BUFFER_SIZE];
@@ -432,22 +557,23 @@ void websocket_command(wchar_t *arg)
 	arg = get_arg_in_braces(arg,flag,STOP_SPACES,sizeof(flag)/sizeof(wchar_t)-1);
     arg = get_arg_in_braces(arg,val,STOP_SPACES,sizeof(val)/sizeof(wchar_t)-1);
 
+	if (mWebsocketOptions.size() == 0)
+		init_websocket_options();
+
+	msg[0] = '\0';
+
 	if ( !wcslen(option) ) {
 		wchar_t options[BUFFER_SIZE];
-		if(mWebsocketOptions.size() == 0) {
+		wcscpy(options, L"");
+		for (std::map<wstring,bool>::iterator it = mWebsocketOptions.begin(); it != mWebsocketOptions.end(); it++) {
+			if (!it->second)
+				continue;
+			if (options[0] != L'\0')
+				wcscat(options ,L", ");
+			wcscat(options, it->first.c_str());	
+		}
+		if(options[0] == L'\0') {
 			wcscpy(options, L"-");
-		} else {
-			wcscpy(options, L"");
-			for (std::map<wstring,wstring>::iterator it = mWebsocketOptions.begin(); it != mWebsocketOptions.end(); it++) {
-				if (options[0] != L'\0')
-					wcscat(options ,L", ");
-				wcscat(options, it->first.c_str());
-				if (it->second.length()) {
-					wcscat(options, L"(");
-					wcscat(options, it->second.c_str());
-					wcscat(options, L")");
-				}
-			}
 		}
 		swprintf(msg, rs::rs(1347),
 			bWebsocketEnabled ? L"ON" : L"OFF", options);
@@ -461,37 +587,76 @@ void websocket_command(wchar_t *arg)
 
 		swprintf(msg, rs::rs(1348),
 			bWebsocketDebugEnabled ? L"ON" : L"OFF");
-	} else if ( is_abrev(option, L"on") || is_abrev(option, L"off") ) {
-		bWebsocketEnabled = is_abrev(option, L"on");
+	} else if ( is_abrev(option, L"enable") || is_abrev(option, L"disable") ) {
+		bWebsocketEnabled = is_abrev(option, L"enable");
 		swprintf(msg, rs::rs(1349), bWebsocketEnabled ? L"ON" : L"OFF");
-		
-	} else {
+	} else if ( is_abrev(option, L"list") ) {
+		tintin_puts2(rs::rs(1358)); // TODO rs
+		for(int i = 0; i < WS_OPTIONS_NUM; i++) {
+			swprintf(msg, L"#   %ls (default: %ls) - %ls", WebsocketOptions[i].Name, (WebsocketOptions[i].default_value ? L"ON" : L"OFF"), WebsocketOptions[i].Descr);
+			tintin_puts2(msg);
+		}
+		msg[0] = '\0';
+	} else if ( is_abrev(option, L"path") ) {
+		if ( wcslen(flag) )
+			sWebsocketPath = flag;
+		wsprintf(msg, rs::rs(1359), sWebsocketPath.c_str());
+	} else if ( is_abrev(option, L"header") ) {
 		if ( wcslen(flag) ) {
-			if ( !wcsicmp(flag, L"disable") ) {
-				std::map<wstring,wstring>::iterator it = mWebsocketOptions.find(option);
-				if (it != mWebsocketOptions.end())
-					mWebsocketOptions.erase(it);
-				swprintf(msg, rs::rs(1352), option);
-			} else if ( !wcsicmp(flag, L"enable") ) {
-				mWebsocketOptions[option] = val;
-				if (!wcslen(val))
-					swprintf(msg, rs::rs(1353), option);
-				else
-					swprintf(msg, rs::rs(1354), option, val);
+			if (wcslen(val)) {
+				mWebsocketHeaders[flag] = val;
+				swprintf(msg, rs::rs(1362), flag, val);
 			} else {
-				mWebsocketOptions[option] = flag;
-				swprintf(msg, rs::rs(1354), option, flag);
+				std::map<wstring,wstring>::iterator it = mWebsocketHeaders.find(flag);
+				if (it != mWebsocketHeaders.end())
+					mWebsocketHeaders.erase(it);
+				swprintf(msg, rs::rs(1363), flag);
 			}
 		} else {
-			std::map<wstring,wstring>::iterator it = mWebsocketOptions.find(option);
+			wchar_t headers[BUFFER_SIZE];
+			if(mWebsocketHeaders.size() == 0) {
+				wcscpy(headers, L"-");
+			} else {
+				wcscpy(headers, L"");
+				for (std::map<wstring,wstring>::iterator it = mWebsocketHeaders.begin(); it != mWebsocketHeaders.end(); it++) {
+					if (headers[0] != L'\0')
+						wcscat(headers ,L"; ");
+					wcscat(headers, it->first.c_str());
+					wcscat(headers, L" = ");
+					wcscat(headers, it->second.c_str());
+				}
+			}
+			swprintf(msg, rs::rs(1360), headers); // TODO rs
+		}
+	} else {
+		if ( wcslen(flag) ) {
+			std::map<wstring,bool>::iterator it = mWebsocketOptions.find(option);
 			if (it == mWebsocketOptions.end())
-				swprintf(msg, rs::rs(1352), option);
+				swprintf(msg, rs::rs(1354), option);
+			else {
+				if ( is_abrev( flag, L"disable" ) )
+					mWebsocketOptions[option] = false;
+				else if ( is_abrev( flag, L"enable" ) )
+					mWebsocketOptions[option] = true;
+
+				if (mWebsocketOptions[option])
+					swprintf(msg, rs::rs(1353), option);
+				else
+					swprintf(msg, rs::rs(1352), option);
+			}
+		} else {
+			std::map<wstring,bool>::iterator it = mWebsocketOptions.find(option);
+			if (it == mWebsocketOptions.end())
+				swprintf(msg, rs::rs(1354), option);
+			else if (it->second)
+				swprintf(msg, rs::rs(1353), option);
 			else
-				swprintf(msg, rs::rs(1354), option, it->second.c_str());
+				swprintf(msg, rs::rs(1352), option);
 		}
 	}
 
-	tintin_puts2(msg);
+	if (msg[0] != '\0')
+		tintin_puts2(msg);
 }
 
 void promptend_command(wchar_t *arg) 
@@ -532,7 +697,7 @@ void promptend_command(wchar_t *arg)
 	tintin_puts2(buff);
 }
 
-int send_websocket_frame(int opcode, const char *data, unsigned int count)
+int send_websocket_frame(int opcode, char *data, unsigned int count, bool telnet)
 {
 	bool FIN = true;
 	bool RSV1 = false,
@@ -544,7 +709,21 @@ int send_websocket_frame(int opcode, const char *data, unsigned int count)
     char mask[4];
     int bufsize = 0;
 
-	char *tmp_buf = NULL;
+	bool free_data = false;
+
+	if (opcode < 0) {
+		if (telnet) {
+			if (check_websocket_option(L"send-telnet-binary"))
+				opcode = WS_OPCODE_BINARY;
+			else if (check_websocket_option(L"send-telnet-base64"))
+				opcode = WS_OPCODE_TEXT;
+			else
+				return 0; // can't send telnet command in utf8
+		} else if (check_websocket_option(L"send-input-binary"))
+			opcode = WS_OPCODE_BINARY;
+		else
+			opcode = WS_OPCODE_TEXT;
+	}
 
 	pJmcObj->m_pvarEventParams[0] = 1;
 	pJmcObj->m_pvarEventParams[1] = opcode;
@@ -557,18 +736,35 @@ int send_websocket_frame(int opcode, const char *data, unsigned int count)
 
 	// TODO: copy pJmcObj->m_pvarEventParams[2].bstrVal to data
 
+	if ( (opcode == WS_OPCODE_TEXT || opcode == WS_OPCODE_BINARY) && (
+			( telnet && check_websocket_option(L"send-telnet-base64")) ||
+			(!telnet && check_websocket_option(L"send-input-base64" )) 
+		 )) {
+		int b64_capacity = count * 8 / 6 + 64;
+		char *b64 = (char*)malloc(b64_capacity);
+		int b64_size = base64_encode(b64, b64_capacity, data, count);
+		data = b64;
+		count = b64_size;
+		free_data = true;
+	}
+
 	if (SocketFlags & SOCKWSCOMPRESS) {
+		char *data_compressed = (char*)malloc(count + 256);
+
 		RSV1 = true;
 		deflateReset(&ws_stream_out);
 
-		tmp_buf = new char[count+256];
 		int used = 0, compressed = 0;
-		do_ws_compression(data, count, &used, tmp_buf, count + 256, &compressed);
+		do_ws_compression(data, count, &used, data_compressed, count + 256, &compressed);
 		if (used < count)
 			tintin_puts(L"#websocket: compression error, can't deflate all bytes");
 
-		data = tmp_buf;
+		if (free_data)
+			free(data);
+
+		data = data_compressed;
 		count = compressed;
+		free_data = true;
 	}
     
     buf[bufsize++] = (FIN  ? 0x80  : 0) |
@@ -591,13 +787,13 @@ int send_websocket_frame(int opcode, const char *data, unsigned int count)
     }
 
     if (masked) {
-        for (int nb = 0; nb < sizeof(mask); nb++)
-            buf[bufsize++] = mask[nb] = rand() & 0xff;
+		for (int nb = 0; nb < sizeof(mask); nb++)
+			buf[bufsize++] = mask[nb] = rand() & 0xff;
     } else
         memset(mask, 0, sizeof(mask));
     
 	int total_sent;
-    for (total_sent = 0; total_sent < count; ) {
+    for (total_sent = 0; ; ) {
         int to_send = count;
         if (bufsize + to_send > sizeof(buf))
             to_send = sizeof(buf) - bufsize;
@@ -612,10 +808,12 @@ int send_websocket_frame(int opcode, const char *data, unsigned int count)
 			break;
         bufsize = 0;
         total_sent += to_send;
+		if (total_sent >= count)
+			break;
     }
 
-	if (tmp_buf)
-		delete[] tmp_buf;
+	if (free_data)
+		free(data);
 
 	if (opcode == WS_OPCODE_PING)
 		ws_ping_sent = GetTickCount();
@@ -633,8 +831,16 @@ int send_websocket_ping(int timeout_ms) {
 		if (elapsed >= 0 && elapsed < timeout_ms)
 			return 0;
 	}
-	send_websocket_frame(WS_OPCODE_PING, "ping", strlen("ping"));
+	send_websocket_frame(WS_OPCODE_PING, "ping", strlen("ping"), false);
 	return 1;
+}
+
+static int send_to_transport(char *buf, int nbytes, bool telnet_command) {
+	if (SocketFlags & SOCKWEBSOCKET) {
+		return send_websocket_frame(-1, buf, nbytes, telnet_command);
+	} else {
+		return tls_send(MUDSocket, buf, nbytes);
+	}
 }
 
 int telnet_send_command(const char* output, int length) {
@@ -649,10 +855,7 @@ int telnet_send_command(const char* output, int length) {
 	BOOL add_cr = TRUE;
 
 	if (bWebsocketEnabled) {
-		if (mWebsocketOptions.find(L"single-iac") != mWebsocketOptions.end())
-			iac_single = TRUE;
-		if (mWebsocketOptions.find(L"no-cr") != mWebsocketOptions.end())
-			add_cr = FALSE;
+		add_cr = check_websocket_option(L"send-input-add-cr");
 	}
 
 	if ( iac_single )
@@ -687,13 +890,7 @@ int telnet_send_command(const char* output, int length) {
 		}
 	}
 
-	int sent;
-
-	if (SocketFlags & SOCKWEBSOCKET) {
-		sent = send_websocket_frame(WS_OPCODE_TEXT, buff, size);
-	} else {
-		sent = tls_send(MUDSocket, buff, size);
-	}
+	int sent= send_to_transport(buff, size, false);
 
 	if (sent < 0)
 		ret = sent;
@@ -744,17 +941,6 @@ void free_telnet_buffer() {
 	WSSize = InputSize = DecompressedSize = OutputSize = 0;
 }
 
-void increase_capacity(char **ppBuf, int *capacity, int needed) {
-	if (needed > *capacity) {
-		int newcap = needed + BUFFER_SIZE;
-		char *newptr = (char*)realloc(*ppBuf, newcap);
-		if (newptr) {
-			*capacity = newcap;
-			*ppBuf = newptr;
-		}
-	}
-}
-
 void reset_telnet_protocol()
 {
 	deinit_ws_compression();
@@ -775,6 +961,7 @@ void reset_telnet_protocol()
 
 static unsigned int recv_websocket_frame(char *src, int size)
 {
+	wchar_t msg[BUFFER_SIZE];
     if (size < 2)
         return 0;
     unsigned char header = src[0];
@@ -785,6 +972,7 @@ static unsigned int recv_websocket_frame(char *src, int size)
 	int opcode = (header & 0x0F);
     bool masked = ((src[1] & 0x80) != 0);
     unsigned int count = src[1] & 0x7F;
+	bool free_src = false;
 
 	if (!FIN) {
 		tintin_puts(L"#websocket: fragmented message received, not supported");
@@ -837,69 +1025,134 @@ static unsigned int recv_websocket_frame(char *src, int size)
 	ret += count;
 
 	if (bWebsocketDebugEnabled) {
-		wchar_t msg[BUFFER_SIZE];
 		wsprintf(msg, L"#websocket: received websocket opcode %d, payload size %d", opcode, count);
 		tintin_puts(msg);
 	}
 
-	pJmcObj->m_pvarEventParams[0] = 0;
-	pJmcObj->m_pvarEventParams[1] = opcode;
-	pJmcObj->m_pvarEventParams[2] = (src);
-	
-    BOOL bRet = pJmcObj->Fire_Websocket();
-	
-	if (!bRet)
-		return ret;
+	if (count > 0 && (SocketFlags & SOCKWSCOMPRESS) && RSV1) {
+		char *decompressed_src = NULL;
+		int decomp_size = 0;
+		int used = 0;
 
-	// TODO: copy pJmcObj->m_pvarEventParams[2].bstrVal to src
+		do_ws_decompression(src, count, &used, &decompressed_src, &decomp_size);
 
-	if (opcode == WS_OPCODE_TEXT || opcode == WS_OPCODE_BINARY) {
-		if ((SocketFlags & SOCKWSCOMPRESS) && RSV1) {
-			inflateReset(&ws_stream_in);
-			for (int offset = 0;; ) {
-				int used = 0, decompressed = 0;
-				increase_capacity(&pInputData, &InputCapacity, InputSize + (count - offset)*2 + 256);
-				do_ws_decompression(&src[offset], count - offset, &used, pInputData + InputSize, InputCapacity - InputSize, &decompressed);
-				InputSize += decompressed;
-				offset += used;
-				if (!used && !decompressed) {
-					if (offset < count)
-						tintin_puts(L"#websocket: can't decompress rest of the bytes");
-					break;
-				}
-			}
-		} else {
-			increase_capacity(&pInputData, &InputCapacity, InputSize + count);
-			if (InputSize + count > InputCapacity) {
-				//not enough memory!
-				count = InputCapacity - InputSize;
-			}
-			if (count > 0) {
-				memcpy(pInputData + InputSize, src, count);
-				InputSize += count;
-			}
+		if (!decompressed_src)
+			return 0;
+
+		src = decompressed_src;
+		count = decomp_size;
+		free_src =  true;
+
+		if (bWebsocketDebugEnabled) {
+			wsprintf(msg, L"#websocket: permessage-inflated to %d byte(s)", count);
+			tintin_puts(msg);
+		}
+	}
+
+	if (opcode == WS_OPCODE_TEXT && (check_websocket_option(L"recv-text-base64") || check_websocket_option(L"recv-text-base64-inflate"))) {
+		int b64_capacity = count * 6 / 8 + 64;
+		char *b64 = (char*)malloc(b64_capacity);
+		int b64_size = base64_decode(b64, b64_capacity, src, count);
+		if (free_src)
+			free(src);
+		src = b64;
+		count = b64_size;
+		free_src = true;
+
+		if (bWebsocketDebugEnabled) {
+			wsprintf(msg, L"#websocket: base64 decoded to %d byte(s)", count);
+			tintin_puts(msg);
+		}
+	}
+
+	if ( (opcode == WS_OPCODE_TEXT   && check_websocket_option(L"recv-text-base64-inflate")) ||
+		 (opcode == WS_OPCODE_BINARY && check_websocket_option(L"recv-binary-inflate")     ) ) {
+		char *decompressed_src = NULL;
+		int decomp_size = 0;
+		int used = 0;
+		do_ws_decompression(src, count, &used, &decompressed_src, &decomp_size);
+		if (free_src)
+			free(src);
+		if (!decompressed_src)
+			return 0;
+		src = decompressed_src;
+		count = decomp_size;
+		free_src =  true;
+
+		if (bWebsocketDebugEnabled) {
+			wsprintf(msg, L"#websocket: message inflated to %d byte(s)", count);
+			tintin_puts(msg);
+		}
+	}
+
+	{
+		int wide_len = MultiByteToWideChar(MudCodePageUsed, 0, src, count, NULL, 0);
+		wchar_t *wsrc = new wchar_t[wide_len + 1];
+		MultiByteToWideChar(MudCodePageUsed, 0, src, count, wsrc, wide_len);
+		wsrc[wide_len] = L'\0';
+
+		pJmcObj->m_pvarEventParams[0] = 0;
+		pJmcObj->m_pvarEventParams[1] = opcode;
+		pJmcObj->m_pvarEventParams[2] = (wsrc);
+		
+		BOOL bRet = pJmcObj->Fire_Websocket();
+		
+		if (!bRet) {
+			if (free_src)
+				free(src);
+			return ret;
 		}
 
-		if (mWebsocketOptions.find(L"message-prompt") != mWebsocketOptions.end()) {
+		// TODO: copy pJmcObj->m_pvarEventParams[2].bstrVal to src
+	}
+
+	if (opcode == WS_OPCODE_TEXT || opcode == WS_OPCODE_BINARY) {
+		increase_capacity(&pInputData, &InputCapacity, InputSize + count);
+		if (InputSize + count > InputCapacity) {
+			//not enough memory!
+			count = InputCapacity - InputSize;
+		}
+		if (count > 0) {
+			memcpy(pInputData + InputSize, src, count);
+			InputSize += count;
+		}
+
+		if ( (opcode == WS_OPCODE_TEXT   && check_websocket_option(L"recv-text-prompt"  )) ||
+			 (opcode == WS_OPCODE_BINARY && check_websocket_option(L"recv-binary-prompt")) ) {
 			increase_capacity(&pInputData, &InputCapacity, InputSize + 1);
 			if (InputSize + 1 < InputCapacity) {
 				pInputData[InputSize++] = END_OF_PROMPT_MARK;
 			}
 		}
 	} else if (opcode == WS_OPCODE_CLOSE) {
+		if (bWebsocketDebugEnabled) {
+			USES_CONVERSION;
+			src[count] = '\0';
+			unsigned int close_code = 0;
+			char *close_msg = "";
+			if (count >= 2) {
+				close_code = ((unsigned char)src[0] << 8) | (unsigned char)src[1];
+				close_msg = src + 2;
+			}
+			swprintf(msg, rs::rs(1361), close_code, A2W(close_msg));
+			tintin_puts2(msg);
+		}
 		cleanup_session();
 		zap_command(L"");
 	} else if (opcode == WS_OPCODE_PING) {
-		send_websocket_frame(WS_OPCODE_PONG, src, count);
+		send_websocket_frame(WS_OPCODE_PONG, src, count, false);
 	} else if (opcode == WS_OPCODE_PONG) {
 		DWORD now = GetTickCount();
 		if (ws_ping_sent > 0) {
 			int delay = (int)(now - ws_ping_sent);
-			if (delay >= 0 && mWebsocketOptions.find(L"ping") != mWebsocketOptions.end())
+			if (delay >= 0 && check_websocket_option(L"ping"))
 				lPingMUD = delay;
 		}
 	} else {
 	}
+
+	if (free_src)
+		free(src);
 
 	return ret;
 }
@@ -957,37 +1210,38 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 {
 	int ret = 0;
 	increase_capacity(&pOutputData, &OutputCapacity, maxsize);
-	while (OutputSize < OutputCapacity && maxsize > 0) {
+	while (OutputSize > 0 || maxsize > 0) {
 		int input_processed = 0, output_generated = 0;
 
-		if (SocketFlags & SOCKCOMPRESSING) {
-			if (InputSize > 0) {
-				increase_capacity(&pDecompressedData, &DecompressedCapacity, DecompressedSize + maxsize);
+		if (OutputSize < OutputCapacity) {
+			if (SocketFlags & SOCKCOMPRESSING) {
+				if (InputSize > 0) {
+					increase_capacity(&pDecompressedData, &DecompressedCapacity, DecompressedSize + maxsize);
 
-				int decompressed = 0;
-				do_decompressing((const char*)pInputData, InputSize, &input_processed, 
-								 (char*)pDecompressedData + DecompressedSize, DecompressedCapacity - DecompressedSize, &decompressed);
-				DecompressedSize += decompressed;
-			}
+					int decompressed = 0;
+					do_decompressing((const char*)pInputData, InputSize, &input_processed, 
+									 (char*)pDecompressedData + DecompressedSize, DecompressedCapacity - DecompressedSize, &decompressed);
+					DecompressedSize += decompressed;
+				}
 
-			if (DecompressedSize > 0) {
-				int processed = 0;
-				do_telnet_protecol((const char*)pDecompressedData, DecompressedSize, &processed,
+				if (DecompressedSize > 0) {
+					int processed = 0;
+					do_telnet_protecol((const char*)pDecompressedData, DecompressedSize, &processed,
+									   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
+
+					if (processed < DecompressedSize)
+						memmove(pDecompressedData, pDecompressedData + processed, DecompressedSize - processed);
+					DecompressedSize -= processed;
+				}
+			} else if (InputSize > 0) {
+				do_telnet_protecol((const char*)pInputData, InputSize, &input_processed,
 								   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
-
-				if (processed < DecompressedSize)
-					memmove(pDecompressedData, pDecompressedData + processed, DecompressedSize - processed);
-				DecompressedSize -= processed;
 			}
-		} else if (InputSize > 0) {
-			do_telnet_protecol((const char*)pInputData, InputSize, &input_processed,
-							   (char*)pOutputData + OutputSize, OutputCapacity - OutputSize, &output_generated);
 		}
 		
-		if (input_processed < InputSize)
+		if (input_processed > 0 && input_processed < InputSize)
 			memmove(pInputData, pInputData + input_processed, InputSize - input_processed);
 		InputSize -= input_processed;
-		
 		OutputSize += output_generated;
 		
 		static DWORD mode = 0;
@@ -1042,7 +1296,7 @@ int telnet_pop_front(wchar_t *dst, int maxsize)
 			maxsize -= len;
 		}
 
-		if (processed < OutputSize)
+		if (processed > 0 && processed < OutputSize)
 			memmove(pOutputData, pOutputData + processed, OutputSize - processed);
 		OutputSize -= processed;
 		ret += len;
@@ -1073,7 +1327,7 @@ static void request_charsets()
 	buf.push_back((char)TN_IAC);
 	buf.push_back((char)TN_SE);
 	
-	tls_send(MUDSocket, buf.begin(), buf.size());
+	send_to_transport(buf.begin(), buf.size(), true);
 }
 
 static void handle_charsets(const char *data, int length)
@@ -1142,7 +1396,7 @@ static void handle_charsets(const char *data, int length)
 			confirm.push_back((char)TN_IAC);
 			confirm.push_back((char)TN_SE);
 			
-			tls_send(MUDSocket, confirm.begin(), confirm.size());
+			send_to_transport(confirm.begin(), confirm.size(), true);
 		}
 		break;
 	case CHARSET_ACCEPTED:
@@ -1209,7 +1463,7 @@ void send_telnet_subnegotiation(unsigned char option, const wchar_t *output, int
 
 	delete[] coded;
 	
-	tls_send(MUDSocket, buf.begin(), buf.size());
+	send_to_transport(buf.begin(), buf.size(), true);
 
 	if (mesvar[MSG_TELNET]) {
 		wchar_t buffer[BUFFER_SIZE], optname[64];
@@ -1571,15 +1825,15 @@ static int sock_recv(int sock, char *dst, int nbytes) {
 	fd_set set;
 
 	for (;;) {
-		FD_ZERO(&set);
-		FD_SET(sock, &set);
-		if (select(sock + 1, &set, NULL, NULL, &tm) <= 0)
-			return -1;
-		if (FD_ISSET(sock, &set)) {
-			int ret = tls_recv(sock, dst, nbytes);
-			if (ret != 0)
-				return ret;
+		if (tls_pending(sock) <= 0) {
+			FD_ZERO(&set);
+			FD_SET(sock, &set);
+			if (select(sock + 1, &set, NULL, NULL, &tm) < 0)
+				return -1;
 		}
+		int ret = tls_recv(sock, dst, nbytes);
+		if (ret != 0)
+			return ret;
 	}
 }
 
@@ -1600,12 +1854,28 @@ static int sock_getline(int sock, char *dst, int maxlen) {
 	return len;
 }
 
+static char *http_header(const char *key, const char *value) {
+	USES_CONVERSION;
+
+	static char buf[BUFFER_SIZE];
+
+	std::map<wstring, wstring>::iterator it = mWebsocketHeaders.find(A2W(key));
+	if (it != mWebsocketHeaders.end())
+		value = W2A(it->second.c_str());
+	if (strlen(value) > 0)
+		sprintf(buf, "%s: %s\r\n", key, value);
+	else
+		buf[0] = '\0';
+
+	return buf;
+}
+
 int telnet_init_session(int sock) {
 	USES_CONVERSION;
 
 	if (bWebsocketEnabled) {
 		char key[16];
-		char buf[BUFFER_SIZE], exts[BUFFER_SIZE], b64key[sizeof(key)*8/6 + 8];
+		char req[BUFFER_SIZE], buf[BUFFER_SIZE], b64key[sizeof(key)*8/6 + 8];
 		bool compressed = false;
 		wchar_t msg[BUFFER_SIZE];
 
@@ -1613,36 +1883,51 @@ int telnet_init_session(int sock) {
 		for (int i = 0; i < sizeof(key); i++)
 			key[i] = rand();
 		base64_encode(b64key, sizeof(b64key), key, sizeof(key));
+
+		sprintf(req, "GET %s HTTP/1.1\r\n", W2A(sWebsocketPath.c_str()));
+
+		sprintf(buf, "%s:%d", W2A(MUDHostName), MUDHostPort);
+		strcat(req, http_header("Host", buf));
+
+		sprintf(buf, "https://%s", W2A(MUDHostName));
+		strcat(req, http_header("Origin", buf));
+
+		strcat(req, http_header("Connection", "Upgrade"));
+
+		strcat(req, http_header("Upgrade", "websocket"));
+
+		sprintf(buf, "%d", WEBSOCKET_VERSION);
+		strcat(req, http_header("Sec-WebSocket-Version", buf));
+
+		strcat(req, http_header("Sec-WebSocket-Key", b64key));
 		
 		buf[0] = '\0';
-		if (mWebsocketOptions.find(L"permessage-deflate") != mWebsocketOptions.end()) {
+		if (check_websocket_option(L"permessage-deflate")) {
 			strcat(buf, "permessage-deflate");
 		}
-		if (strlen(buf) == 0)
-			exts[0] = '\0';
-		else
-			sprintf(exts, "Sec-WebSocket-Extensions: %s\r\n", buf);
-		
-		sprintf(buf,
-			"GET / HTTP/1.1\r\n"
-            "Host: %s\r\n"
-			"Origin: %s\r\n"
-            "Upgrade: websocket\r\n"
-			"Connection: Upgrade\r\n"
-			"Sec-WebSocket-Version: %d\r\n"
-			"Sec-WebSocket-Key: %s\r\n"
-			"%s"
-			"User-Agent: %s\r\n"
-			"\r\n",
+		if (strlen(buf) > 0) {
+			strcat(req, http_header("Sec-WebSocket-Extensions", buf));
+		}
 
-			W2A(mWebsocketOptions.find(L"Host") != mWebsocketOptions.end() ? mWebsocketOptions[L"Host"].c_str() : MUDHostName),
-			W2A(mWebsocketOptions.find(L"Origin") != mWebsocketOptions.end() ? mWebsocketOptions[L"Origin"].c_str() : MUDHostName),
-			WEBSOCKET_VERSION,
-			b64key,
-			exts,
-			W2A(mWebsocketOptions.find(L"User-Agent") != mWebsocketOptions.end() ? mWebsocketOptions[L"User-Agent"].c_str() : strProductName)
-		);
-		tls_send(sock, buf, strlen(buf));
+		if (check_websocket_option(L"send-input-base64") && check_websocket_option(L"recv-text-base64")) {
+			strcat(req, http_header("Sec-WebSocket-Protocol", "base64"));
+		}
+
+		strcat(req, http_header("User-Agent", W2A(strProductName)));
+
+		for (std::map<wstring,wstring>::iterator it = mWebsocketHeaders.begin(); it != mWebsocketHeaders.end(); it++) {
+			if (wcslen(it->second.c_str()) > 0) {
+				sprintf(buf, "\r\n%s: ", W2A(it->first.c_str()));
+				if (!strstr(req, buf)) {
+					sprintf(buf, "%s: %s\r\n", W2A(it->first.c_str()), W2A(it->second.c_str()));
+					strcat(req, buf);
+				}
+			}
+		}
+
+		strcat(req, "\r\n");
+
+		tls_send(sock, req, strlen(req));
 
 		int len = sock_getline(sock, buf, sizeof(buf));
 		if (len <= 0)
@@ -1697,9 +1982,9 @@ int telnet_init_session(int sock) {
 		}
 
 		SocketFlags |= SOCKWEBSOCKET;
-		if (compressed) {
-			init_ws_compression();
-		}
+		if (compressed)
+			SocketFlags |= SOCKWSCOMPRESS;
+		init_ws_compression();
 
 		return 0;
 	}
@@ -1709,7 +1994,9 @@ int telnet_init_session(int sock) {
 
 void telnet_close_session() {
 	if (SocketFlags & SOCKWEBSOCKET) {
-		send_websocket_frame(WS_OPCODE_CLOSE, 0, 0);
+		static char *close_ws = "\x03\xe8telnet_close_session";
+		//static char *close_ws = "\x10\xetelnet_close_session";
+		send_websocket_frame(WS_OPCODE_CLOSE, close_ws, strlen(close_ws), false);
 	}
 	deinit_ws_compression();
 	ws_ping_sent = 0;

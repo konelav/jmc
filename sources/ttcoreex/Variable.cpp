@@ -444,6 +444,7 @@ void variable_value_random(wchar_t *arg)
 }
 
 extern wchar_t MUDHostName[256];
+extern unsigned short MUDHostPort;
 void variable_value_hostname(wchar_t *arg)
 {
 	if (!MUDAddress.sin_addr.s_addr) {

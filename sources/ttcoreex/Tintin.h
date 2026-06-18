@@ -170,7 +170,9 @@ extern BOOL bLogPassedLine;
 //vls-end//
 
 extern std::vector<unsigned int> vEnabledTelnetOptions;
-extern std::map<wstring,wstring> mWebsocketOptions;
+extern std::map<wstring,bool> mWebsocketOptions;
+extern std::map<wstring,wstring> mWebsocketHeaders;
+extern wstring sWebsocketPath;
 extern BOOL DLLEXPORT bTelnetDebugEnabled;
 extern BOOL DLLEXPORT bWebsocketDebugEnabled;
 extern BOOL DLLEXPORT bSecureDebugEnabled;
@@ -477,6 +479,7 @@ void bar_command(wchar_t *arg);
 void sync_command(wchar_t *arg);
 
 int base64_encode(char *dst, int capacity, const char *src, int size);
+int base64_decode(char *dst, int capacity, const char *src, int size);
 
 //Proxy support
 void proxy_command(wchar_t *arg);
@@ -489,6 +492,7 @@ int tls_open(SOCKET sock);
 int tls_send(SOCKET sock, const char *buffer, int length);
 int tls_recv(SOCKET sock, char *buffer, int maxlength);
 int tls_close(SOCKET sock);
+int tls_pending(SOCKET sock);
 
 
 //Telnet routines
@@ -496,8 +500,10 @@ int get_telnet_option_num(const wchar_t *name);
 void get_telnet_option_name(unsigned int num, wchar_t *buf);
 void send_telnet_command(unsigned char command, int option = -1);
 void send_telnet_subnegotiation(unsigned char option, const wchar_t *output, int length, bool raw_bytes);
-int send_websocket_frame(int opcode, const char *data, unsigned int count);
+int send_websocket_frame(int opcode, char *data, unsigned int count, bool telnet);
 int send_websocket_ping(int timeout_ms);
+bool check_websocket_option(const wchar_t *Name);
+bool default_websocket_option(const wchar_t *Name);
 void telnet_command(wchar_t *arg);
 void websocket_command(wchar_t *arg);
 void promptend_command(wchar_t *arg);
@@ -524,6 +530,8 @@ void oob_command(wchar_t *arg);
 
 //(auto)mapper
 void mapper_command(wchar_t *arg);
+
+void base64_command(wchar_t *arg);
 
 
 // VARIABLES:
@@ -639,7 +647,7 @@ extern void* JMCObjRet[1000];
 // --END
 
 //* en:JMC functions struct. look cmds.h
-const int JMC_CMDS_NUM=135;
+const int JMC_CMDS_NUM=136;
 typedef struct jmc_cmd 
 	{
 	wchar_t*alias;

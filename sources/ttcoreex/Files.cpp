@@ -602,19 +602,27 @@ void write_command(wchar_t *arg)
 		set_lines += buffer;
 
 		//save websocket options
-		for (std::map<wstring,wstring>::iterator it = mWebsocketOptions.begin(); it != mWebsocketOptions.end(); it++) {
-			prepare_for_write(L"websocket", it->first.c_str(), L"enable", it->second.c_str(), L"", L"", buffer);
+		for (std::map<wstring,bool>::iterator it = mWebsocketOptions.begin(); it != mWebsocketOptions.end(); it++) {
+			if (it->second != default_websocket_option(it->first.c_str())) {
+				prepare_for_write(L"websocket", it->first.c_str(), it->second ? L"enable" : L"disable", L"", L"", L"", buffer);
+				set_lines += buffer;
+			}
+		}
+		for (std::map<wstring,wstring>::iterator it2 = mWebsocketHeaders.begin(); it2 != mWebsocketHeaders.end(); it2++) {
+			prepare_for_write(L"websocket", L"header", it2->first.c_str(), it2->second.c_str(), L"", L"", buffer);
 			set_lines += buffer;
 		}
+		prepare_for_write(L"websocket", L"path", sWebsocketPath.c_str(), L"", L"", L"", buffer);
+		set_lines += buffer;
 		if (bWebsocketDebugEnabled)
 			prepare_for_write(L"websocket", L"debug", L"on", L"", L"", buffer);
 		else
 			prepare_for_write(L"websocket", L"debug", L"off", L"", L"", buffer);
 		set_lines += buffer;
 		if (bWebsocketEnabled)
-			prepare_for_write(L"websocket", L"on", L"", L"", L"", buffer);
+			prepare_for_write(L"websocket", L"enable", L"", L"", L"", buffer);
 		else
-			prepare_for_write(L"websocket", L"off", L"", L"", L"", buffer);
+			prepare_for_write(L"websocket", L"disable", L"", L"", L"", buffer);
 		set_lines += buffer;
 
 		//save oob (out-of-band) settings

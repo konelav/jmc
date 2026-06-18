@@ -611,7 +611,25 @@ wchar_t *get_arg_in_braces(wchar_t *s, wchar_t *arg, int flag, int maxlength)
 /**********************************************/
 wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 {
-  int inside1=FALSE, inside2=FALSE;
+  int remove_quotes=TRUE;
+  int inside=FALSE;
+  
+  if (s[0] == '{') {
+	  int nested = 1;
+	  for (int i = 1; s[i] != '\0'; i++) {
+		  if (s[i] == '{')
+			  nested++;
+		  else if (s[i] == '}') {
+			  nested--;
+			  if (nested == 0) {
+				  if (s[i + 1] == '\0' || s[i + 1] == cCommandDelimiter)
+					  remove_quotes = FALSE;
+				  break;
+			  }
+		  }
+	  }
+  }
+
   s=space_out(s);
   
   while(*s && maxlength > 0) {
@@ -621,13 +639,9 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 			maxlength--;
 		}
     }
-    else if(*s==L'"' && !inside1) {
+    else if(remove_quotes && *s==L'"' && !inside) {
       s++;
-      inside2=!inside2;
-    }
-	else if(*s==L'\'' && !inside2) {
-      s++;
-      inside1=!inside1;
+      inside=!inside;
     }
 
     // else if(*s==L';') {
@@ -645,7 +659,7 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 		      ( bColon && *s==L';'              )) 
 			  &&
 			  (*(s-1) != L'\\')) {
-		if(inside1 || inside2) {
+		if(inside) {
 			*arg++=*s++;
 			maxlength--;
 		}
@@ -653,7 +667,7 @@ wchar_t *get_arg_stop_spaces(wchar_t *s, wchar_t *arg, int maxlength)
 		break;
     }
 
-    else if(!inside1 && !inside2 && *s==L' ')
+    else if(!inside && *s==L' ')
       break;
     else {
       *arg++=*s++;

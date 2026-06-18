@@ -52,6 +52,7 @@ struct listnode *common_antisubs = NULL, *common_pathdirs = NULL, *common_path =
 
 SOCKET MUDSocket;
 wchar_t MUDHostName[256];
+unsigned short MUDHostPort;
 sockaddr_in MUDAddress;
 
 LONG DLLEXPORT lPingMUD;
@@ -515,6 +516,13 @@ unsigned long __stdcall ConnectThread(void * pParam)
 	if (ulProxyAddress && dwProxyType == PROXY_HTTP) { /* let the proxy resolve address */
 		wcscpy(MUDHostName, strConnectAddress);
 		memset(&sockaddr, 0, sizeof(sockaddr));
+
+		struct hostent *hp;
+        if((hp=gethostbyname(W2A(strConnectAddress)))!=NULL) {
+    	    struct in_addr inad;
+	        inad.S_un.S_addr = *(long*)hp->h_addr_list[0];
+			memcpy((char *)&sockaddr.sin_addr, hp->h_addr, sizeof(sockaddr.sin_addr));
+        }
 	} else if(iswdigit(*strConnectAddress)) {                            /* interprete host part */
         sockaddr.sin_addr.s_addr=inet_addr(W2A(strConnectAddress));
 
@@ -542,9 +550,10 @@ unsigned long __stdcall ConnectThread(void * pParam)
         memcpy((char *)&sockaddr.sin_addr, hp->h_addr, sizeof(sockaddr.sin_addr));
     }
 
-    if(iswdigit(*strConnectPort))
-        sockaddr.sin_port=htons((short)_wtoi(strConnectPort));      /* inteprete port part */
-    else {
+    if(iswdigit(*strConnectPort)) {
+        sockaddr.sin_port=htons((unsigned short)_wtoi(strConnectPort));      /* inteprete port part */
+		MUDHostPort = (unsigned short)_wtoi(strConnectPort);
+    } else {
         tintin_puts2(rs::rs(1187));
         return 0;
     }
@@ -708,7 +717,7 @@ unsigned long __stdcall PingThread(void * pParam)
 		int t0 = GetTickCount();
 
 		if (bDisplayPing) {
-			if (bWebsocketEnabled && mWebsocketOptions.find(L"ping") != mWebsocketOptions.end()) {
+			if (bWebsocketEnabled && check_websocket_option(L"ping")) {
 				// already set in telnet module?
 			} else {
 				lPingMUD = ping_single_host(MUDAddress.sin_addr.s_addr, time_step_ms);
@@ -1130,7 +1139,7 @@ void read_mud(void )
 	unsigned long len;
 	bool error = false;
 
-	if( ioctlsocket(MUDSocket, FIONREAD, &len) == SOCKET_ERROR ) {
+	if( (len = tls_pending(MUDSocket)) < 0 ) {
 		error = true;
 	} else if( len == 0 ) {
 		error = true;
@@ -1178,7 +1187,13 @@ void read_mud(void )
 					WriteFile(hExLog , processed , didget , &Written, NULL);
 				}
 #endif
-				more_coming = telnet_more_coming();
+
+				if (telnet_more_coming())
+					more_coming = 1;
+				else if (tls_pending(MUDSocket) > 0)
+					more_coming = 1;
+				else
+					more_coming = 0;
 
 				if ( bSubstitution ) {
 					int i;
@@ -1279,17 +1294,23 @@ void DLLEXPORT ReadMud()
                 SetEvent(eventAllObjectEvent);
             }
 
-		if (bDisplayPing && bWebsocketEnabled && mWebsocketOptions.find(L"ping") != mWebsocketOptions.end()) {
+		if (bDisplayPing && bWebsocketEnabled && check_websocket_option(L"ping")) {
 			send_websocket_ping(1000);
 		}
 
-        FD_ZERO(&readfdmask);
-        FD_SET(MUDSocket,&readfdmask);
+		int has_pending = (tls_pending(MUDSocket) > 0);
+		
+		if (!has_pending) {
+	        FD_ZERO(&readfdmask);
+		    FD_SET(MUDSocket,&readfdmask);
+	
+			/*ticker_interrupted=FALSE;*/
+			int nRet = select(0, &readfdmask,  0, 0, &timeout);
+			if(nRet > 0 && FD_ISSET(MUDSocket,&readfdmask))
+				has_pending = 1;
+		}
 
-        /*ticker_interrupted=FALSE;*/
-        int nRet = select(0, &readfdmask,  0, 0, &timeout);
-
-        if(nRet > 0 && FD_ISSET(MUDSocket,&readfdmask))
+        if(has_pending > 0)
             read_mud();
         else { // do delayed delete 
             // check we have delayed string without \n

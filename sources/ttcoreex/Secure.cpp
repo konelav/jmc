@@ -21,6 +21,7 @@ static WOLFSSL_CTX *ctx = NULL;
 static WOLFSSL_X509_STORE *store = NULL;
 
 extern wchar_t MUDHostName[256];
+extern unsigned short MUDHostPort;
 
 extern BOOL bSecureDebugEnabled;
 
@@ -379,4 +380,27 @@ int tls_close(SOCKET sock)
 		last_tls = TLS_DISABLED;
 		return 0;
 	}
+}
+
+int tls_pending(SOCKET sock) {
+	unsigned long len = 0;
+	switch (last_tls) {
+	default:
+	case TLS_DISABLED:
+		if( ioctlsocket(sock, FIONREAD, &len) == SOCKET_ERROR )
+			return -1;
+		break;
+	case TLS_SSL3:
+	case TLS_TLS1:
+	case TLS_TLS1_1:
+	case TLS_TLS1_2:
+	case TLS_TLS1_3:
+		len = wolfSSL_pending(ssl);
+		if (len == 0) {
+			if( ioctlsocket(sock, FIONREAD, &len) == SOCKET_ERROR )
+				return -1;
+		}
+		break;
+	}
+	return len;
 }

@@ -6,6 +6,7 @@
 static unsigned char socks5_method_implemented [] = { NO_AUTH_REQ, USER_PWD };
 
 extern wchar_t MUDHostName[256];
+extern unsigned short MUDHostPort;
 
 /* socks 5 functions */
 static int socks5_create_methods (struct socks5_methods * method, unsigned char met);

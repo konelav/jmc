@@ -714,7 +714,20 @@ BEGIN
     IDS_STRING1351          "#websocket: wrong headers in server reply"
     IDS_STRING1352          "#websocket option '%ls' disabled"
     IDS_STRING1353          "#websocket option '%ls' enabled"
-    IDS_STRING1354          "#websocket option '%ls' set to '%ls'"
+    IDS_STRING1354          "#websocket unknown option '%ls'"
+    IDS_STRING1355          "#websocket deflate error"
+    IDS_STRING1356          "#websocket inflate error"
+    IDS_STRING1357          "#telnet list of known options:"
+    IDS_STRING1358          "#websocket list of known options:"
+    IDS_STRING1359          "#websocket path set to '%ls'"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING1360          "#websocket headers set: %ls"
+    IDS_STRING1361          "#websocket closed connection with code %d, message '%ls'"
+    IDS_STRING1362          "#websocket header '%ls' set to '%ls'"
+    IDS_STRING1363          "#websocket header '%ls' removed"
 END
 
 #endif    // English (U.S.) resources

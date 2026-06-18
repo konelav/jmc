@@ -448,7 +448,7 @@ STDMETHODIMP CJmcObj::DoTelnet(LONG Command, LONG Option, BSTR bstrData)
 STDMETHODIMP CJmcObj::DoWebsocket(LONG Opcode, BSTR bstrData)
 {
 	if (!SysStringLen(bstrData))
-		send_websocket_frame(Opcode, NULL, 0);
+		send_websocket_frame(Opcode, NULL, 0, false);
 	else {
 		char *coded;
 		int length = SysStringLen(bstrData);
@@ -456,7 +456,7 @@ STDMETHODIMP CJmcObj::DoWebsocket(LONG Opcode, BSTR bstrData)
 		for (int i = 0; i < length; i++) {
 			coded[i] = (unsigned char)bstrData[i];
 		}
-		send_websocket_frame(Opcode, coded, length);
+		send_websocket_frame(Opcode, coded, length, false);
 		delete[] coded;
 	}
 
