@@ -236,7 +236,7 @@ void parse_input(wchar_t *input, BOOL bExecuteNow)
 			if (bDisplayCommands) {
 				// output command in square brackets
 				wchar_t strInputCommand[BUFFER_SIZE], strOutputBuffer[BUFFER_SIZE];
-				wcscpy(strInputCommand, L"\n[");
+				wcscpy(strInputCommand, L"[");
 				wcscat(strInputCommand, command);
 				if (*arg != L'\0') {
 					wcscat(strInputCommand, L" ");
